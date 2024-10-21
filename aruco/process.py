@@ -1,6 +1,9 @@
 import numpy as np 
 import cv2 as cv 
 import glob 
+import os
+
+OUT_IMAGE_DIR = "out_images"
 
 # Chess board information
 cb_width = 9
@@ -18,9 +21,9 @@ cb_3d_points[:, :2] = np.mgrid[0:cb_width, 0:cb_height].T.reshape(-1, 2) * cb_sq
 list_cb_3d_points = []
 list_cb_2d_img_points = []
 
-list_images = glob.glob('images/*.jpg')
+list_images = glob.glob('cal_images/*.jpg')
 
-for frame_name in list_images:
+for i, frame_name in enumerate(list_images):
     img = cv.imread(frame_name)
 
     gray = cv.cvtColor(img, cv.COLOR_BGR2GRAY)
@@ -38,6 +41,9 @@ for frame_name in list_images:
 
         # Draw and display
         cv.drawChessboardCorners(img, (cb_width, cb_height), corners2, ret)
+        file_name = "out_image_" + str(i) + ".jpg"
+        path = os.path.join(OUT_IMAGE_DIR, file_name)
+        cv.imwrite(path, img)
         cv.imshow("img", img)
         cv.waitKey(500)
 

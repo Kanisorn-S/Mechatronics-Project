@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import os
 
-cap = cv.VideoCapture(0)
+cap = cv.VideoCapture(1)
 
 while cap.isOpened():
   ret, frame = cap.read()
