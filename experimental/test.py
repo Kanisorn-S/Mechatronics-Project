@@ -1,9 +1,11 @@
 import cv2
 
-cap = cv2.VideoCapture(1)
+cap = cv2.VideoCapture(0)
 
 while cap.isOpened():
   ret, frame = cap.read()
+
+  print(frame.shape)
 
   cv2.imshow('Webcam', frame)
 

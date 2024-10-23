@@ -43,7 +43,7 @@ with open('camera_cal.npy', 'rb') as f:
 # ArUco markers dictionary
 aruco_dict = aruco.getPredefinedDictionary(aruco.DICT_4X4_250)
 
-cap = cv.VideoCapture(1)
+cap = cv.VideoCapture(0)
 
 # Camera Specs
 # camera_width = 640
@@ -54,6 +54,7 @@ cap = cv.VideoCapture(1)
 # cap.set(4, camera_height)
 # cap.set(5, camera_frame_rate)
 
+printed = False
 while cap.isOpened():
 
     ret, frame = cap.read()
@@ -61,12 +62,18 @@ while cap.isOpened():
     gray_frame = cv.cvtColor(frame, cv.COLOR_BGR2GRAY)
 
     corners, ids, rejected = aruco.detectMarkers(gray_frame, aruco_dict, camera_matrix, camera_distortion)
+
     if ids is not None:
 
         aruco.drawDetectedMarkers(frame, corners)
         cv.circle(frame, (int(corners[0][0][0][0]), int(corners[0][0][0][1])), 5, (255, 0, 0), -1)
 
         rvec_list_all, tvec_list_all, _objPoints = aruco.estimatePoseSingleMarkers(corners, marker_size, camera_matrix, camera_distortion)
+
+        if not printed:
+            print(rvec_list_all[0])
+            print(tvec_list_all[0])
+            printed = True
 
         rvec = rvec_list_all[0][0]
         tvec = tvec_list_all[0][0]
@@ -80,11 +87,9 @@ while cap.isOpened():
 
         pitch, roll, yaw = rotationMatrixToEulerAngles(rotation_matrix)
 
-        tvec_str = "x=%4.0f, y=%4.0f, direction=%4.0f"%(realworld_tvec[0], realworld_tvec[1], math.degrees(yaw))
+        # tvec_str = "x=%4.0f, y=%4.0f, direction=%4.0f"%(realworld_tvec[0], realworld_tvec[1], math.degrees(yaw))
+        tvec_str = "x=%4.0f, y=%4.0f, z=%4.0f"%(realworld_tvec[0], realworld_tvec[1], realworld_tvec[2])
         cv.putText(frame, tvec_str, (20, 400), cv.FONT_HERSHEY_PLAIN, 2, (0, 0, 255), 2, cv.LINE_AA)
-        height, width, channel = frame.shape
-        center_x = int(width / 2)
-        cv.line(frame, (center_x, 0), (center_x, height), (255, 0, 0), 10)
     
     cv.imshow("frame", frame)
 

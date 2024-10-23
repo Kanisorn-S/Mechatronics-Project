@@ -8,7 +8,7 @@ cv.namedWindow("Image Feed")
 cv.moveWindow("Image Feed", 159, -25)
 
 # Creating a camera object for webcam
-cap = cv.VideoCapture(1)
+cap = cv.VideoCapture(0)
 
 # Set resolution and framerates according to camera specs
 # cap.set(cv.CAP_PROP_FRAME_WIDTH, 3280)
@@ -27,7 +27,7 @@ while cap.isOpened():
     frame_count += 1
 
     if frame_count == 30:
-        img_path = os.path.join("images", "cal_image_" + str(cal_image_count) + ".jpg")
+        img_path = os.path.join("calibration_images", "cal_image_" + str(cal_image_count) + ".jpg")
         cv.imwrite(img_path, frame)
         cal_image_count += 1
         frame_count = 0
