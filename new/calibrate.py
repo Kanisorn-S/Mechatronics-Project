@@ -8,7 +8,7 @@ cv.namedWindow("Image Feed")
 cv.moveWindow("Image Feed", 159, -25)
 
 # Creating a camera object for webcam
-cap = cv.VideoCapture(0)
+cap = cv.VideoCapture(1)
 
 # Set resolution and framerates according to camera specs
 # cap.set(cv.CAP_PROP_FRAME_WIDTH, 3280)

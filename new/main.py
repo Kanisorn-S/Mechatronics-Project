@@ -34,16 +34,19 @@ def calculate_XYZ(u,v):
 
   return XYZ
 
-cap  = cv.VideoCapture(0)
-
-print(calculate_XYZ(0, 0))
-
-while cap.isOpened():
-  ret, frame = cap.read()
-  cv.imshow("Webcam", frame)
+if __name__ == "__main__":
   
-  if cv.waitKey(1) & 0xFF == ord('q'):
-    break
+  cap  = cv.VideoCapture(1)
+
+  print(calculate_XYZ(0, 0))
+
+  while cap.isOpened():
+    ret, frame = cap.read()
+    cv.circle(frame, (400, 400), 2, (255, 0, 0), -1)
+    print(calculate_XYZ(400, 400))
+    cv.imshow("Webcam", frame)
+    if cv.waitKey(1) & 0xFF == ord('q'):
+      break
   
-cap.release()
-cv.destroyAllWindows()
+  cap.release()
+  cv.destroyAllWindows()

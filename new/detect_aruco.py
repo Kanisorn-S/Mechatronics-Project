@@ -48,7 +48,7 @@ camera_distortion=np.load(os.path.join(savedir, 'dist.npy'))
 # ArUco markers dictionary
 aruco_dict = aruco.getPredefinedDictionary(aruco.DICT_4X4_250)
 
-cap = cv.VideoCapture(0)
+cap = cv.VideoCapture(1)
 
 # Camera Specs
 # camera_width = 640

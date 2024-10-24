@@ -40,47 +40,48 @@ print("cx: "+str(cx)+",cy "+str(cy)+",fx "+str(fx))
 
 total_points_used=10
 
-X_center=10.9
-Y_center=10.7
-Z_center=43.4
+X_center=437
+Y_center=515
+Z_center=486
 worldPoints=np.array([[X_center,Y_center,Z_center],
-                       [5.5,3.9,46.8],
-                       [14.2,3.9,47.0],
-                       [22.8,3.9,47.4],
-                       [5.5,10.6,44.2],
-                       [14.2,10.6,43.8],
-                       [22.8,10.6,44.8],
-                       [5.5,17.3,43],
-                       [14.2,17.3,42.5],
-                       [22.8,17.3,44.4]], dtype=np.float32)
+                       [495,225,524],
+                       [720,225,524],
+                       [945,225,525],
+                       [495,450,491],
+                       [720,450,495],
+                       [945,450,497],
+                       [495,675,467],
+                       [720,675,466],
+                       [945,675,467]], dtype=np.float32)
 
 #MANUALLY INPUT THE DETECTED IMAGE COORDINATES HERE
 
 #[u,v] center + 9 Image points
 imagePoints=np.array([[cx,cy],
-                       [502,185],
-                       [700,197],
-                       [894,208],
-                       [491,331],
-                       [695,342],
-                       [896,353],
-                       [478,487],
-                       [691,497],
-                       [900,508]], dtype=np.float32)
+                       [303-50, 237],
+                       [367-50, 237],
+                       [430-50, 235],
+                       [303-50, 294],
+                       [367-50, 293],
+                       [433-50, 293],
+                       [298-50, 357],
+                       [367-50, 357],
+                       [437-50, 357]], dtype=np.float32)
 
 
 #FOR REAL WORLD POINTS, CALCULATE Z from d*
 
 for i in range(1,total_points_used):
+    print(i)
     #start from 1, given for center Z=d*
     #to center of camera
     wX=worldPoints[i,0]-X_center
     wY=worldPoints[i,1]-Y_center
     wd=worldPoints[i,2]
 
-    d1=np.sqrt(np.square(wX)+np.square(wY))
-    wZ=np.sqrt(np.square(wd)-np.square(d1))
-    worldPoints[i,2]=wZ
+    # d1=np.sqrt(np.square(wX)+np.square(wY))
+    # wZ=np.sqrt(np.square(wd)-np.square(d1))
+    # worldPoints[i,2]= wd * (100/26)
 
 print(worldPoints)
 
