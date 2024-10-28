@@ -1,11 +1,20 @@
 import cv2 as cv
+import numpy as np
 from finger_detection.finger_detect import skin_mask, detect_hand_and_index_finger
 from new.main import calculate_XYZ
 from new.test_move import move_cursor
 import pyautogui
+import joblib
 
 pyautogui.FAILSAFE = False
 
+model = joblib.load('linear_regression_model.pkl')
+# Example input data for prediction
+X_new = np.array([[5, 6]])
+
+# Make predictions
+y_pred = model.predict(X_new)
+print("Predicted output:", y_pred)
 
 cap = cv.VideoCapture(1)
 
