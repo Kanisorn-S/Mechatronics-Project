@@ -8,6 +8,8 @@ class CircleGridApp:
         # Get the screen resolution
         self.screen_width = root.winfo_screenwidth()
         self.screen_height = root.winfo_screenheight()
+        print(self.screen_width)
+        print(self.screen_height)
 
         # Set the initial resolution to full screen size
         self.root.geometry(f"{self.screen_width}x{self.screen_height}")
@@ -28,7 +30,8 @@ class CircleGridApp:
         self.tenth_circle_center = (1018, 810)  # Programmable center
 
         # Draw the initial 9 circles
-        self.draw_circles()
+        # self.draw_circles()
+        self.draw_line()
 
         # Bind 'p' key for full screen toggle
         self.root.bind('<p>', self.toggle_full_screen)
@@ -39,7 +42,7 @@ class CircleGridApp:
 
     def draw_line(self):
         x_position = 100
-        self.canvas.create_line(x_position, 0, x_position, self.screen_height, fill="black", width=2)
+        self.canvas.create_line(268, 267, 987, 369, fill="black", width=2)
         
     def draw_circle(self, center, radius, color='black'):
         """Helper function to draw a circle with a center dot"""

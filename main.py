@@ -23,6 +23,8 @@ while cap.isOpened():
   # convert (u, v) to (x, y)
   x, y, z = calculate_XYZ(u, v)
   
+  # invert x, y for projector
+  x = 1440 - x
   # update cursor position
   move_cursor(x * 2, y * 2)
 

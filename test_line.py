@@ -1,14 +1,18 @@
 import cv2 as cv
 import numpy as np
+from new.main import calculate_XYZ
 
 # Coordinates for point A and point B
-point_A = (50, 50)    # You can change these coordinates
-point_B = (200, 200)  # You can change these coordinates
+point_A = (200, 300)    # You can change these coordinates
+point_B = (400, 300)  # You can change these coordinates
+
+print("A: ", calculate_XYZ(1440, 900, 200, 300))
+print("B: ", calculate_XYZ(1440, 900, 400, 300))
 
 # Boolean variable to choose line style
-is_dashed = True  # Set to True for dashed line, False for solid line
+is_dashed = False  # Set to True for dashed line, False for solid line
 
-cap = cv.VideoCapture(0)
+cap = cv.VideoCapture(1)
 
 # # Create a blank white image
 # image = np.ones((400, 400, 3), dtype=np.uint8) * 255

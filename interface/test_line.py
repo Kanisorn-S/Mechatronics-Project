@@ -1,18 +1,27 @@
 import tkinter as tk
 
 # Coordinates for point A and point B
-point_A = (50, 50)     # You can change these coordinates
-point_B = (200, 200)   # You can change these coordinates
+point_A = (314, 137)     # You can change these coordinates
+point_B = (666, 473)   # You can change these coordinates
 
 # Boolean variable to choose line style
 is_dashed = False  # Set to True for dashed line, False for solid line
 
+full_screen = False
+
+def toggle_full_screen(event):
+        """Toggle between full screen and windowed mode on 'p' key press"""
+        full_screen = not full_screen
+        root.attributes('-fullscreen', full_screen)
+
 # Create the main window
 root = tk.Tk()
 root.title("Line from Point A to Point B")
-
+root.bind('<p>', toggle_full_screen)
+screen_width = root.winfo_screenwidth()
+screen_height = root.winfo_screenheight()
 # Set up the Canvas
-canvas = tk.Canvas(root, width=400, height=400, bg="white")
+canvas = tk.Canvas(root, width=screen_width, height=screen_height, bg="white")
 canvas.pack()
 
 # Determine the line style based on the is_dashed variable

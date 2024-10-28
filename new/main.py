@@ -21,7 +21,7 @@ scalingfactor=s_arr[0]
 inverse_newcam_mtx = np.linalg.inv(newcam_mtx)
 inverse_R_mtx = np.linalg.inv(R_mtx)
 
-def calculate_XYZ(u,v):
+def calculate_XYZ(screen_width, screen_height, u,v):
                                       
   #Solve: From Image Pixels, find World Points
 
@@ -31,8 +31,32 @@ def calculate_XYZ(u,v):
   xyz_c=inverse_newcam_mtx.dot(suv_1)
   xyz_c=xyz_c-tvec1
   XYZ=inverse_R_mtx.dot(xyz_c)
+  XYZ_t = convert_z(screen_width, screen_height, XYZ)
 
-  return XYZ
+  return XYZ_t
+
+def convert_z(screen_width, screen_height, xyz):
+  x, y, z = xyz
+  if int(z) == 492:
+    return xyz
+  print("x: ", x)
+  print("y: ", y)
+  print("z: ", z)
+  a = np.abs((screen_width / 2) - x)
+  b = np.abs((screen_height + 150) - y)
+  c = np.sqrt(a**2 + b**2)
+  print("a: ", a)
+  print("b: ", b)
+  r = (493 / z) * c
+  print("r: ", r)
+  theta = np.arctan(b / a)
+  print("theta: ", theta)
+  x_t = (screen_width / 2) - (r * np.cos(theta))
+  if x > (screen_width / 2):
+    x_t = (screen_width / 2) + (r * np.cos(theta))
+  y_t = np.abs((screen_height) - (r * np.sin(theta)))
+  xyz_t = [x_t, y_t, 493]
+  return xyz_t
 
 if __name__ == "__main__":
   
