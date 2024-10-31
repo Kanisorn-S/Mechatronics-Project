@@ -31,7 +31,8 @@ class CircleGridApp:
 
         # Draw the initial 9 circles
         # self.draw_circles()
-        self.draw_line()
+        # self.draw_line()
+        self.draw_poly()
 
         # Bind 'p' key for full screen toggle
         self.root.bind('<p>', self.toggle_full_screen)
@@ -43,6 +44,21 @@ class CircleGridApp:
     def draw_line(self):
         x_position = 100
         self.canvas.create_line(321, 467, 1002, 468, fill="black", width=2)
+    
+    def draw_poly(self):
+        point_A = (492, 280)    # Top left corner
+        point_B = (491, 466)   # Top right corner
+        point_C = (661, 467)  # Bottom right corner
+        point_D = (662, 280)   # Bottom left corner
+
+        # Draw the rectangle using points A, B, C, and D
+        self.canvas.create_polygon(
+            point_A[0], point_A[1],
+            point_B[0], point_B[1],
+            point_C[0], point_C[1],
+            point_D[0], point_D[1],
+            outline="blue", fill="", width=2
+        )
         
     def draw_circle(self, center, radius, color='black'):
         """Helper function to draw a circle with a center dot"""
