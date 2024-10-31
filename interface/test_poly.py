@@ -1,10 +1,10 @@
 import tkinter as tk
 
 # Coordinates for the corners of the rectangle
-point_A = (50, 50)    # Top left corner
-point_B = (200, 50)   # Top right corner
-point_C = (200, 150)  # Bottom right corner
-point_D = (50, 150)   # Bottom left corner
+point_A = (492, 280)    # Top left corner
+point_B = (491, 466)   # Top right corner
+point_C = (661, 467)  # Bottom right corner
+point_D = (662, 280)   # Bottom left corner
 
 # Create the main window
 root = tk.Tk()
