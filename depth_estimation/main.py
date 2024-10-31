@@ -46,13 +46,28 @@ class Midas():
       ).squeeze()
     depthMap = prediction.cpu().numpy()
     depthMap = cv.normalize(depthMap, None, alpha=0, beta=255, norm_type=cv.NORM_MINMAX, dtype=cv.CV_8U)
-    print(depthMap[240][320])
     depthMap = cv.applyColorMap(depthMap, cv.COLORMAP_INFERNO)
     return depthMap
+  
+  def predict_point(self, frame, point):
+    u, v = point
+    img = cv.cvtColor(frame, cv.COLOR_BGR2RGB)
+    input_batch = self.transform(img).to(self.device)
+    with torch.no_grad():
+      prediction = self.midas(input_batch)
+      prediction = torch.nn.functional.interpolate(
+        prediction.unsqueeze(1),
+        size=img.shape[:2],
+        mode="bicubic",
+        align_corners=False,
+      ).squeeze()
+    depthMap = prediction.cpu().numpy()
+    depthMap = cv.normalize(depthMap, None, alpha=0, beta=255, norm_type=cv.NORM_MINMAX, dtype=cv.CV_8U)
+    return depthMap[u][v] 
 
   def livePredict(self):
     print("Starting webcam (press q to quit)...")
-    capObj = cv.VideoCapture(0)
+    capObj = cv.VideoCapture(1)
     while True:
       ret, frame = capObj.read()
       depthMap = self.predict(frame)

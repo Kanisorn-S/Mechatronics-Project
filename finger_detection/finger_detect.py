@@ -104,7 +104,6 @@ def detect_hand_and_index_finger(frame, mask):
 
         if not index_finger_tip:
             index_finger_tip = (100, 100)
-        print(index_finger_tip)
 
     return frame, index_finger_tip
 

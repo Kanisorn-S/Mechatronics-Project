@@ -31,9 +31,9 @@ def calculate_XYZ(screen_width, screen_height, u,v):
   xyz_c=inverse_newcam_mtx.dot(suv_1)
   xyz_c=xyz_c-tvec1
   XYZ=inverse_R_mtx.dot(xyz_c)
-  XYZ_t = convert_z(screen_width, screen_height, XYZ)
+  # XYZ_t = convert_z(screen_width, screen_height, XYZ)
 
-  return XYZ_t
+  return XYZ
 
 def convert_z(screen_width, screen_height, xyz):
   x, y, z = xyz
