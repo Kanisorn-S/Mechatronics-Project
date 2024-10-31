@@ -42,7 +42,7 @@ class CircleGridApp:
 
     def draw_line(self):
         x_position = 100
-        self.canvas.create_line(268, 267, 987, 369, fill="black", width=2)
+        self.canvas.create_line(321, 467, 1002, 468, fill="black", width=2)
         
     def draw_circle(self, center, radius, color='black'):
         """Helper function to draw a circle with a center dot"""

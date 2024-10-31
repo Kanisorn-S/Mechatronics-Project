@@ -1,14 +1,21 @@
 import cv2 as cv
 import numpy as np
+import joblib
 from new.main import calculate_XYZ
+
+model = joblib.load('linear_regression_model.pkl')
 
 # Coordinates for point A and point B
 point_A = (200, 300)    # You can change these coordinates
 point_B = (400, 300)  # You can change these coordinates
 
-print("A: ", calculate_XYZ(1440, 900, 200, 300))
-print("B: ", calculate_XYZ(1440, 900, 400, 300))
+A = np.array([[point_A[0], point_A[1]]])
+B = np.array([[point_B[0], point_B[1]]])
+# print("A: ", calculate_XYZ(1440, 900, 200, 300))
+# print("B: ", calculate_XYZ(1440, 900, 400, 300))
 
+print("A: ", model.predict(A))
+print("B: ", model.predict(B))
 # Boolean variable to choose line style
 is_dashed = False  # Set to True for dashed line, False for solid line
 

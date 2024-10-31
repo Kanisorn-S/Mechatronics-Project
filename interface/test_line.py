@@ -1,8 +1,8 @@
 import tkinter as tk
 
 # Coordinates for point A and point B
-point_A = (314, 137)     # You can change these coordinates
-point_B = (666, 473)   # You can change these coordinates
+point_A = (321, 467)     # You can change these coordinates
+point_B = (1002, 468)   # You can change these coordinates
 
 # Boolean variable to choose line style
 is_dashed = False  # Set to True for dashed line, False for solid line
