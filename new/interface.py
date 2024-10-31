@@ -31,8 +31,8 @@ class CircleGridApp:
 
         # Draw the initial 9 circles
         # self.draw_circles()
-        # self.draw_line()
-        self.draw_poly()
+        self.draw_line()
+        # self.draw_poly()
 
         # Bind 'p' key for full screen toggle
         self.root.bind('<p>', self.toggle_full_screen)
