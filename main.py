@@ -1,6 +1,7 @@
 import cv2 as cv
 import numpy as np
 from finger_detection.finger_detect import skin_mask, detect_hand_and_index_finger
+from mp_hands.main import detect_index_finger
 from new.main import calculate_XYZ
 from new.test_move import move_cursor
 import pyautogui
@@ -26,7 +27,7 @@ while cap.isOpened():
   # find index finger coordinates in (u, v)
   frame = cv.flip(frame, 1)
   mask = skin_mask(frame)
-  frame_with_finger, index_finger_pos = detect_hand_and_index_finger(frame, mask)
+  frame_with_finger, index_finger_pos = detect_index_finger(frame)
   u, v = index_finger_pos
   X = np.array([[u, v]])
   
@@ -37,7 +38,7 @@ while cap.isOpened():
   x, y = Y[0]
   
   # invert x, y for projector
-  x = 1440 - x
+  # x = 1440 - x
   # update cursor position
   move_cursor(x * 2, y * 2)
 
