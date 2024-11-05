@@ -1,8 +1,8 @@
 import cv2 as cv
 import numpy as np
 from finger_detection.finger_detect import skin_mask, detect_hand_and_index_finger
-from new.main import calculate_XYZ
-from new.test_move import move_cursor
+from src.main import calculate_XYZ
+from src.test_move import move_cursor
 import pyautogui
 import joblib
 

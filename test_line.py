@@ -1,7 +1,7 @@
 import cv2 as cv
 import numpy as np
 import joblib
-from new.main import calculate_XYZ
+from src.main import calculate_XYZ
 
 model = joblib.load('linear_regression_model.pkl')
 
