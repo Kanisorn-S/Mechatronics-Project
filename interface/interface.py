@@ -30,14 +30,14 @@ class CircleGridApp:
         self.tenth_circle_center = (1018, 810)  # Programmable center
 
         # Draw the initial 9 circles
-        # self.draw_circles()
+        self.draw_circles()
         # self.draw_line()
-        self.draw_poly((453, 533), (487, 526), (497, 560), (463, 571))
-        self.draw_poly((595, 728), (619, 728), (619, 754), (595, 754))
-        self.draw_poly((600, 519), (630, 519), (630, 545), (600, 545))
-        self.draw_poly((684, 646), (708, 646), (708, 672), (684, 672))
-        self.draw_poly((749, 523), (780, 497), (800, 523), (770, 549))
-        self.draw_poly((780, 643), (810, 632), (820, 665), (789, 676))
+        # self.draw_poly((453, 533), (487, 526), (497, 560), (463, 571))
+        # self.draw_poly((595, 728), (619, 728), (619, 754), (595, 754))
+        # self.draw_poly((600, 519), (630, 519), (630, 545), (600, 545))
+        # self.draw_poly((684, 646), (708, 646), (708, 672), (684, 672))
+        # self.draw_poly((749, 523), (780, 497), (800, 523), (770, 549))
+        # self.draw_poly((780, 643), (810, 632), (820, 665), (789, 676))
 
         # Bind 'p' key for full screen toggle
         self.root.bind('<p>', self.toggle_full_screen)

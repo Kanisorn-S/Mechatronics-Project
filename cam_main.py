@@ -1,6 +1,6 @@
 import cv2 as cv
 import numpy as np
-from nut_classifier.model import find_nuts
+from nut_classifier.model import find_nuts, calculate_contour_areas
 from camconfirm import find_nut_circle
 import joblib
 import tkinter as tk
@@ -19,29 +19,46 @@ while cap.isOpened():
   cropped_frame = frame[crop_y:crop_y + crop_height, crop_x:crop_x + crop_width]
 
   X = []
+  boxes_X = []
   # circles = find_nut_circle(cropped_frame)
   # for circle in circles:
   #   x, y, _ = circle
   #   X.append([x, y])
-  detected, blur, edged, boxes, centers = find_nuts(cropped_frame, max_size=200)
-  # for box in boxes:
-  #   original_box = []
-  #   for coor in box:
-  #     original_box.append(coor + [crop_x, crop_y]) 
-  #   X.append(original_box)
-  X = centers
+  detected, blur, edged, boxes, centers, sizes = find_nuts(cropped_frame, max_size=200)
+  for box in boxes:
+    original_box = []
+    for coor in box:
+      original_box.append(coor + [crop_x, crop_y]) 
+    boxes_X.append(original_box)
+  np_centers = np.array(centers)
+  shift = np.array([crop_x, crop_y])
+  # for center in centers:
+  #   original_center = np.add(np_centers, shift)
+  #   X.append(original_center)
+  center_X = np.add(np_centers, shift)
+  # X = centers
   cv.imshow("Result", detected)
   cv.imshow("Blur", blur)
   cv.imshow("Edge", edged)
 
   Y = []
-  # X = np.array(box)
-  # for x in X:
-  #   Y.append(model.predict(x))
-  Y = model.predict(X)
+  boxes_Y = []
+  boxes_X = np.array(boxes_X)
+  for box in boxes_X:
+    boxes_Y.append(model.predict(box))
+
+  center_Y = model.predict(center_X)
+
   
   # (tl, tr, br, bl) = Y
-  print(Y)
+  # size_ind = []
+  # for size in sizes:
+  #   if size < 50:
+  #     size_ind.append(0) #M3
+  #   elif 50 <= size < 92:
+  #     size_ind.append(1) #M4
+  #   elif size > 93:
+  #     size_ind.append(2) #M5
   
   if cv.waitKey(1) & 0xFF == ord('q'):
     break
@@ -49,6 +66,17 @@ while cap.isOpened():
 cap.release()
 cv.destroyAllWindows()
 
+print(boxes_Y)
+areas = calculate_contour_areas(boxes_Y)
+print(areas)
+size_ind = []
+for area in areas:
+  if area < 700:
+    size_ind.append(0) #M3
+  elif 700 <= area < 1050:
+    size_ind.append(1) #M4
+  elif 1050 <= area:
+    size_ind.append(2) #M5
 class CircleGridApp:
     def __init__(self, root, circle_radius=50):
         self.root = root
@@ -57,8 +85,6 @@ class CircleGridApp:
         # Get the screen resolution
         self.screen_width = root.winfo_screenwidth()
         self.screen_height = root.winfo_screenheight()
-        print(self.screen_width)
-        print(self.screen_height)
 
         # Set the initial resolution to full screen size
         self.root.geometry(f"{self.screen_width}x{self.screen_height}")
@@ -79,8 +105,8 @@ class CircleGridApp:
         self.tenth_circle_center = (1018, 810)  # Programmable center
 
         # Draw the initial 9 circles
-        for coor in Y:
-          self.draw_circle(coor, 5)
+        for i, coor in enumerate(center_Y):
+          self.draw_circle(coor, 30, size_ind[i])
         # self.draw_line()
         # self.draw_poly((453, 533), (487, 526), (497, 560), (463, 571))
         # self.draw_poly((595, 728), (619, 728), (619, 754), (595, 754))
@@ -115,14 +141,18 @@ class CircleGridApp:
             outline="blue", fill="", width=2
         )
         
-    def draw_circle(self, center, radius, color='black'):
+    def draw_circle(self, center, radius, color_ind=0):
         """Helper function to draw a circle with a center dot"""
+        colors = ['blue', 'red', 'green']
+        sizes = ['M3', 'M4', 'M5']
+        color = colors[color_ind]
+        size = sizes[color_ind]
         x, y = center
-        self.canvas.create_oval(x - radius, y - radius, x + radius, y + radius, outline=color)
+        self.canvas.create_oval(x - radius, y - radius, x + radius, y + radius, fill=color, outline=color)
         # Draw a dot at the center
-        self.canvas.create_oval(x - 2, y - 2, x + 2, y + 2, fill=color)
+        # self.canvas.create_oval(x - 2, y - 2, x + 2, y + 2, fill=color)
         # Display center coordinates as text
-        self.canvas.create_text(x, y + radius + 10, text=f"({x}, {y})", fill=color)
+        self.canvas.create_text(x, y + radius + 10, text=f"{size}", fill=color)
 
     def draw_circles(self):
         """Draw the 3x3 grid of circles, centered in the screen"""
