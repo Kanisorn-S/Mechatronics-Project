@@ -8,10 +8,10 @@ import numpy as np
 import imutils
 import cv2
 
-def find_nuts(image, min_size=100, max_size=600):
+def find_nuts(image, min_size=0, max_size=10000000000):
   
   gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-  blur = cv2.GaussianBlur(gray, (9, 9), 0)
+  blur = cv2.GaussianBlur(gray, (5, 5), 0)
 
   edged = cv2.Canny(blur, 50, 100)
   edged = cv2.dilate(edged, None, iterations=1)
@@ -31,6 +31,8 @@ def find_nuts(image, min_size=100, max_size=600):
   # for cnt in cnts:
   #   print(cv2.contourArea(cnt))
 
+  boxes = []
+  centers = []
   for cnt in cnts:
     # (x, y, w, h) = cv2.boundingRect(cnt)
     # cv2.rectangle(image, (x, y), (x + w, y + h), (0, 255, 0), 3)
@@ -39,17 +41,19 @@ def find_nuts(image, min_size=100, max_size=600):
     box = np.array(box, dtype="int")
     box = perspective.order_points(box)
     (tl, tr, br, bl) = box
+    boxes.append(box)
     cv2.drawContours(image, [box.astype("int")], -1, (0, 0, 255), 2)
     mid_pt_horizontal = (tl[0] + int(abs(tr[0] - tl[0])/2), tl[1] + int(abs(tr[1] - tl[1])/2))
     mid_pt_verticle = (tr[0] + int(abs(tr[0] - br[0])/2), tr[1] + int(abs(tr[1] - br[1])/2))
     wid = euclidean(tl, tr)
     ht = euclidean(tr, br)
+    centers.append((mid_pt_horizontal, mid_pt_verticle))
     # print(mid_pt_horizontal)
     # print(mid_pt_verticle)
     cv2.putText(image, "{:.1f}px".format(wid), (int(mid_pt_horizontal[0] - 15), int(mid_pt_horizontal[1] - 10)), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 0), 2)
     cv2.putText(image, "{:.1f}px".format(ht), (int(mid_pt_verticle[0] + 10), int(mid_pt_verticle[1])), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 0), 2)
 
-  return image, box
+  return image, blur, edged, boxes, centers
 
 # Function to show array of images (intermediate results)
 def show_images(images):

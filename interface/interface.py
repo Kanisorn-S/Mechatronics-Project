@@ -1,53 +1,4 @@
-import cv2 as cv
-import numpy as np
-from nut_classifier.model import find_nuts
-from camconfirm import find_nut_circle
-import joblib
 import tkinter as tk
-
-model = joblib.load('linear_regression_model.pkl')
-
-crop_x, crop_y, crop_width, crop_height = 200, 300, 200, 100  # top-left x, y, width, height
-
-cap = cv.VideoCapture(1)
-
-while cap.isOpened():
-  ret, frame = cap.read()
-  if not ret:
-    break
-  
-  cropped_frame = frame[crop_y:crop_y + crop_height, crop_x:crop_x + crop_width]
-
-  X = []
-  # circles = find_nut_circle(cropped_frame)
-  # for circle in circles:
-  #   x, y, _ = circle
-  #   X.append([x, y])
-  detected, blur, edged, boxes, centers = find_nuts(cropped_frame, max_size=200)
-  # for box in boxes:
-  #   original_box = []
-  #   for coor in box:
-  #     original_box.append(coor + [crop_x, crop_y]) 
-  #   X.append(original_box)
-  X = centers
-  cv.imshow("Result", detected)
-  cv.imshow("Blur", blur)
-  cv.imshow("Edge", edged)
-
-  Y = []
-  # X = np.array(box)
-  # for x in X:
-  #   Y.append(model.predict(x))
-  Y = model.predict(X)
-  
-  # (tl, tr, br, bl) = Y
-  print(Y)
-  
-  if cv.waitKey(1) & 0xFF == ord('q'):
-    break
-
-cap.release()
-cv.destroyAllWindows()
 
 class CircleGridApp:
     def __init__(self, root, circle_radius=50):
@@ -79,15 +30,14 @@ class CircleGridApp:
         self.tenth_circle_center = (1018, 810)  # Programmable center
 
         # Draw the initial 9 circles
-        for coor in Y:
-          self.draw_circle(coor, 5)
+        # self.draw_circles()
         # self.draw_line()
-        # self.draw_poly((453, 533), (487, 526), (497, 560), (463, 571))
-        # self.draw_poly((595, 728), (619, 728), (619, 754), (595, 754))
-        # self.draw_poly((600, 519), (630, 519), (630, 545), (600, 545))
-        # self.draw_poly((684, 646), (708, 646), (708, 672), (684, 672))
-        # self.draw_poly((749, 523), (780, 497), (800, 523), (770, 549))
-        # self.draw_poly((780, 643), (810, 632), (820, 665), (789, 676))
+        self.draw_poly((453, 533), (487, 526), (497, 560), (463, 571))
+        self.draw_poly((595, 728), (619, 728), (619, 754), (595, 754))
+        self.draw_poly((600, 519), (630, 519), (630, 545), (600, 545))
+        self.draw_poly((684, 646), (708, 646), (708, 672), (684, 672))
+        self.draw_poly((749, 523), (780, 497), (800, 523), (770, 549))
+        self.draw_poly((780, 643), (810, 632), (820, 665), (789, 676))
 
         # Bind 'p' key for full screen toggle
         self.root.bind('<p>', self.toggle_full_screen)
