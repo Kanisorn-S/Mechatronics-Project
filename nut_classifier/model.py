@@ -28,8 +28,8 @@ def find_nuts(image, min_size=100, max_size=600):
 
   # Remove contours which are not large enough
   # cnts = [x for x in cnts if cv2.contourArea(x) < max_size and cv2.contourArea(x) > min_size]
-  for cnt in cnts:
-    print(cv2.contourArea(cnt))
+  # for cnt in cnts:
+  #   print(cv2.contourArea(cnt))
 
   for cnt in cnts:
     # (x, y, w, h) = cv2.boundingRect(cnt)
@@ -49,7 +49,7 @@ def find_nuts(image, min_size=100, max_size=600):
     cv2.putText(image, "{:.1f}px".format(wid), (int(mid_pt_horizontal[0] - 15), int(mid_pt_horizontal[1] - 10)), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 0), 2)
     cv2.putText(image, "{:.1f}px".format(ht), (int(mid_pt_verticle[0] + 10), int(mid_pt_verticle[1])), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 0), 2)
 
-  return image, blur, edged
+  return image, box
 
 # Function to show array of images (intermediate results)
 def show_images(images):
