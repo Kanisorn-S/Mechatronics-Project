@@ -29,6 +29,7 @@ cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
 while True:
     # Read a frame from the webcam
     ret, frame = cap.read()
+    frame = cv2.imread('./nut.png')
     if not ret:
         break
 

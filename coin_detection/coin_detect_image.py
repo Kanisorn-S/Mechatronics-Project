@@ -2,7 +2,7 @@ import cv2
 import numpy as np
 
 # Load the image
-image = cv2.imread('coins.jpg')
+image = cv2.imread('./nut.png')
 gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 
 # Blur the image to reduce noise
