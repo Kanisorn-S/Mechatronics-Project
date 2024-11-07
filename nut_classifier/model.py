@@ -1,12 +1,40 @@
-"""
-  BY Rucha wagh    21MEB0B73   mech 2nd  year
-"""
 from scipy.spatial.distance import euclidean
 from imutils import perspective
 from imutils import contours
 import numpy as np
 import imutils
 import cv2
+
+# write me a function that takes a coordinate (x, y), the width and height of an image (w, h), and two offsets (x_offset, y_offset)
+# The function should adjust (x, y) so that if (x, y) is at the center, it is offset by (x_offset, y_offset)
+# The further away from the center in the y-axis, the smaller the offset in the y-axis linearly
+# For x, if (x, y) is above the center, the x-coordinate gets offset away from the center
+# For x, if (x, y) is below the center, the x-coordinate gets offset towards the center
+# The further away from the center in the y-axis, the larger the offset in the x-axis linearly
+# The function should return the new (x, y) coordinate
+def adjust_coordinate(x, y, w, h, x_offset, y_offset, y_scale=1):
+    """
+    Adjust the x, y coordinate based on the width, height, and offsets.
+    
+    Parameters:
+        x (int): The x-coordinate.
+        y (int): The y-coordinate.
+        w (int): The width of the image.
+        h (int): The height of the image.
+        x_offset (int): The offset in the x-axis.
+        y_offset (int): The offset in the y-axis.
+    
+    Returns:
+        int: The new x-coordinate.
+        int: The new y-coordinate.
+    """
+    mid_x = w / 2
+    mid_y = h / 2
+    x_diff = x - mid_x
+    y_diff = y - mid_y
+    new_x = x + x_offset * (y_diff / mid_y)
+    new_y = y + y_offset + y_scale * abs(y_diff / mid_y)
+    return int(new_x), int(new_y)
 
 # write me a function to convert an array [x, y, w, h] to an array [[x1, y1], [x2, y2], [x3, y3], [x4, y4]]
 def convert_boxes(boxes):

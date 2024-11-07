@@ -30,7 +30,8 @@ class CircleGridApp:
         self.tenth_circle_center = (1018, 810)  # Programmable center
 
         # Draw the initial 9 circles
-        self.draw_circles()
+        self.draw_cross()
+        # self.draw_circles()
         # self.draw_line()
         # self.draw_poly((453, 533), (487, 526), (497, 560), (463, 571))
         # self.draw_poly((595, 728), (619, 728), (619, 754), (595, 754))
@@ -102,6 +103,13 @@ class CircleGridApp:
     def close(self, event=None):
         self.running = False
         self.root.destroy()
+
+    # write a function to draw 2 lines, one vertical and one horizontal, that intersect at the center of the screen
+    def draw_cross(self):
+        # Draw the vertical line
+        self.canvas.create_line(self.screen_width // 2, 0, self.screen_width // 2, self.screen_height, fill="black", width=2)
+        # Draw the horizontal line
+        self.canvas.create_line(0, self.screen_height // 2, self.screen_width, self.screen_height // 2, fill="black", width=2)
 
 # Initialize the app with full screen resolution and optional circle radius
 if __name__ == "__main__":

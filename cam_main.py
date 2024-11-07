@@ -1,17 +1,23 @@
 import cv2 as cv
 import numpy as np
-from nut_classifier.model import find_nuts, calculate_contour_areas, convert_contours, convert_boxes
+from nut_classifier.model import find_nuts, calculate_contour_areas, convert_contours, convert_boxes, adjust_coordinate
 from camconfirm import find_nut_circle
 import joblib
 import tkinter as tk
 
-model = joblib.load('linear_regression_model.pkl')
+model = joblib.load('new_linear_regression_model.pkl')
 
 # Crop for top camera
 # crop_x, crop_y, crop_width, crop_height = 200, 300, 200, 100  # top-left x, y, width, height
 
 # Crop for bottom camera
-crop_x, crop_y, crop_width, crop_height = 250, 150, 200, 100  # top-left x, y, width, height
+# crop_x, crop_y, crop_width, crop_height = 250, 150, 200, 100  # top-left x, y, width, height
+
+# Crop for bottom camera centered
+# crop_x, crop_y, crop_width, crop_height = 220, 140, 200, 200  # top-left x, y, width, height
+
+# Crop for all screen
+crop_x, crop_y, crop_width, crop_height = 100, 150, 400, 250  # top-left x, y, width, height
 
 cap = cv.VideoCapture(1)
 
@@ -215,17 +221,26 @@ class CircleGridApp:
         
     def draw_circle(self, center, radius, color_ind=0):
         """Helper function to draw a circle with a center dot"""
+        x_offset = 5
+        y_offset = 20
+        y_scale = 10
         colors = ['blue', 'red', 'green']
         sizes = ['M3', 'M4', 'M5']
         color = colors[color_ind]
         size = sizes[color_ind]
         x, y = center
+        x, y = adjust_coordinate(x, y, self.screen_width, self.screen_height, x_offset, y_offset, y_scale)
         self.canvas.create_oval(x - radius, y - radius, x + radius, y + radius, fill=color, outline=color)
         # Draw a dot at the center
         # self.canvas.create_oval(x - 2, y - 2, x + 2, y + 2, fill=color)
         # Display center coordinates as text
         self.canvas.create_text(x, y + radius + 10, text=f"{size}", fill=color)
 
+    # write a method that draws a line across the center of the screen
+    def draw_center_lines(self):
+        """Draw a line across the center of the screen"""
+        self.canvas.create_line(0, self.screen_height // 2, self.screen_width, self.screen_height // 2, fill='black', width=2)
+        
     def draw_circles(self):
         """Draw the 3x3 grid of circles, centered in the screen"""
         self.canvas.delete("all")  # Clear the canvas before redrawing
