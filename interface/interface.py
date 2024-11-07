@@ -20,7 +20,7 @@ class CircleGridApp:
 
         # Circle parameters
         self.circle_radius = circle_radius
-        self.grid_size = 3
+        self.grid_size = 6
         self.spacing = min(self.screen_width, self.screen_height) // (self.grid_size + 1)
         self.centers = []  # To store programmable centers of circles
 
