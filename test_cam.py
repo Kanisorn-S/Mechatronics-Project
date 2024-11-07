@@ -5,11 +5,12 @@ crop_regions = {
     "none": None,
     "top": (200, 300, 200, 100),  # top-left x, y, width, height
     "bottom": (250, 150, 200, 100),  # top-left x, y, width, height
-    "all": (100, 150, 400, 250)
+    "all": (100, 150, 400, 250),
+    "center": (200, 200, 200, 200)
 }
 
 # Choose the crop region
-crop_choice = "all"  # Change to "none", "top", or "bottom"
+crop_choice = "none"  # Change to "none", "top", or "bottom"
 crop_region = crop_regions[crop_choice]
 
 # Choose to draw the grid or not

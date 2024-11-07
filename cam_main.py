@@ -1,6 +1,6 @@
 import cv2 as cv
 import numpy as np
-from nut_classifier.model import find_nuts, calculate_contour_areas, convert_contours, convert_boxes, adjust_coordinate
+from nut_classifier.model import find_nuts, calculate_contour_areas, convert_contours, convert_boxes, adjust_coordinate, add_to_csv
 from camconfirm import find_nut_circle
 import joblib
 import tkinter as tk
@@ -17,7 +17,10 @@ model = joblib.load('new_linear_regression_model.pkl')
 # crop_x, crop_y, crop_width, crop_height = 220, 140, 200, 200  # top-left x, y, width, height
 
 # Crop for all screen
-crop_x, crop_y, crop_width, crop_height = 100, 150, 400, 250  # top-left x, y, width, height
+# crop_x, crop_y, crop_width, crop_height = 100, 150, 400, 250  # top-left x, y, width, height
+
+# Crop for center camera
+crop_x, crop_y, crop_width, crop_height = 200, 200, 200, 200  # top-left x, y, width, height
 
 cap = cv.VideoCapture(1)
 
@@ -141,6 +144,10 @@ print("Sizes of the contours of the detected nuts in camera frame:")
 print(contour_sizes_X)
 print("Sizes of the contours of the detected nuts in projector frame:")
 print(contour_sizes_Y)
+
+
+for i in range(len(bounding_box_sizes_X)):
+  add_to_csv(bounding_box_sizes_X[i], bounding_box_sizes_Y[i], min_box_sizes_X[i], min_box_sizes_Y[i], contour_sizes_X[i], contour_sizes_Y[i], 5)
 
 
 # Select what variable to use for area

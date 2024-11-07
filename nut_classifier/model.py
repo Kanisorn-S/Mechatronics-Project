@@ -5,6 +5,26 @@ import numpy as np
 import imutils
 import cv2
 
+# write a function that takes 7 inputs, bounding_box_size_X, bounding_box_size_Y, min_box_size_X, min_box_size_Y, contour_size_X, contour_size_Y, and nut_type
+# The function should add the data into a csv file called "nuts.csv"
+def add_to_csv(bounding_box_size_X, bounding_box_size_Y, min_box_size_X, min_box_size_Y, contour_size_X, contour_size_Y, nut_type):
+    """
+    Add the data to a CSV file.
+    
+    Parameters:
+        bounding_box_size_X (int): The size of the bounding box in the x-axis.
+        bounding_box_size_Y (int): The size of the bounding box in the y-axis.
+        min_box_size_X (int): The size of the minimum box in the x-axis.
+        min_box_size_Y (int): The size of the minimum box in the y-axis.
+        contour_size_X (int): The size of the contour in the x-axis.
+        contour_size_Y (int): The size of the contour in the y-axis.
+        nut_type (str): The type of nut.
+    """
+    with open("nuts.csv", "a") as file:
+        file.write(f"{bounding_box_size_X}, {bounding_box_size_Y}, {min_box_size_X}, {min_box_size_Y}, {contour_size_X}, {contour_size_Y}, {nut_type}\n")
+    
+    file.close()
+
 # write me a function that takes a coordinate (x, y), the width and height of an image (w, h), and two offsets (x_offset, y_offset)
 # The function should adjust (x, y) so that if (x, y) is at the center, it is offset by (x_offset, y_offset)
 # The further away from the center in the y-axis, the smaller the offset in the y-axis linearly
