@@ -32,8 +32,8 @@ def adjust_coordinate(x, y, w, h, x_offset, y_offset, y_scale=1):
     mid_y = h / 2
     x_diff = x - mid_x
     y_diff = y - mid_y
-    new_x = x + x_offset * (y_diff / mid_y)
-    new_y = y + y_offset + y_scale * abs(y_diff / mid_y)
+    new_x = x - x_offset * (y_diff / mid_y) * (x_diff / mid_x)
+    new_y = y + y_offset - y_scale * abs(y_diff / mid_y)
     return int(new_x), int(new_y)
 
 # write me a function to convert an array [x, y, w, h] to an array [[x1, y1], [x2, y2], [x3, y3], [x4, y4]]

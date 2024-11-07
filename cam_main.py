@@ -221,9 +221,9 @@ class CircleGridApp:
         
     def draw_circle(self, center, radius, color_ind=0):
         """Helper function to draw a circle with a center dot"""
-        x_offset = 5
+        x_offset = 125
         y_offset = 20
-        y_scale = 10
+        y_scale = 25
         colors = ['blue', 'red', 'green']
         sizes = ['M3', 'M4', 'M5']
         color = colors[color_ind]
