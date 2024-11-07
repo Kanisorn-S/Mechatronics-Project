@@ -1,74 +1,144 @@
 import cv2 as cv
 import numpy as np
-from nut_classifier.model import find_nuts, calculate_contour_areas
+from nut_classifier.model import find_nuts, calculate_contour_areas, convert_contours, convert_boxes
 from camconfirm import find_nut_circle
 import joblib
 import tkinter as tk
 
 model = joblib.load('linear_regression_model.pkl')
 
-crop_x, crop_y, crop_width, crop_height = 200, 300, 200, 100  # top-left x, y, width, height
+# Crop for top camera
+# crop_x, crop_y, crop_width, crop_height = 200, 300, 200, 100  # top-left x, y, width, height
+
+# Crop for bottom camera
+crop_x, crop_y, crop_width, crop_height = 250, 150, 200, 100  # top-left x, y, width, height
 
 cap = cv.VideoCapture(1)
 
 while cap.isOpened():
+  
+  # Read frame from camera
   ret, frame = cap.read()
   if not ret:
     break
   
+  # Crop the frame to the defined region
   cropped_frame = frame[crop_y:crop_y + crop_height, crop_x:crop_x + crop_width]
 
-  X = []
-  boxes_X = []
-  # circles = find_nut_circle(cropped_frame)
-  # for circle in circles:
-  #   x, y, _ = circle
-  #   X.append([x, y])
-  detected, blur, edged, boxes, centers, sizes = find_nuts(cropped_frame, max_size=200)
-  for box in boxes:
+  # Find nuts in the cropped frame
+  detected, blur, edged, min_boxes, centers, min_box_sizes, contours, contour_sizes, bounding_boxes, bounding_box_sizes = find_nuts(cropped_frame, max_size=200)
+  
+  # Process the contours
+  # Transform contours coordinates
+  contours = convert_contours(contours)
+  original_contours = []
+  for contour in contours:
+    original_contour = []
+    for coor in contour:
+      original_contour.append(coor + [crop_x, crop_y])
+    original_contours.append(original_contour)
+
+  contours_Y = []
+  contours_X = original_contours
+  for contour in contours_X:
+    contours_Y.append(model.predict(contour))
+
+  # Contour sizes
+  np_contour_sizes = np.array(contour_sizes)
+  contour_sizes_X = np_contour_sizes
+
+  # Process the mininmum boxes
+  min_boxes_X = []
+  for box in min_boxes:
     original_box = []
     for coor in box:
       original_box.append(coor + [crop_x, crop_y]) 
-    boxes_X.append(original_box)
+    min_boxes_X.append(original_box)
+  min_boxes_Y = []
+  min_boxes_X = np.array(min_boxes_X)
+  for box in min_boxes_X:
+    min_boxes_Y.append(model.predict(box))
+  
+  # Min box sizes
+  np_min_box_sizes = np.array(min_box_sizes)
+  min_box_sizes_X = np_min_box_sizes
+
+  # Process the bounding boxes
+  original_box_coords = []
+  print(bounding_boxes)
+  for box in bounding_boxes:
+    original_box = np.add(box, [crop_x, crop_y, 0, 0])
+    original_box_coords.append(original_box)
+  print(original_box_coords)
+  bounding_boxes_X = convert_boxes(original_box_coords)
+  print(bounding_boxes_X)
+    # original_box_coords = convert_boxes([original_box])
+    # bounding_boxes_X.append(original_box_coords)
+  bounding_boxes_Y = []
+  bounding_boxes_X = np.array(bounding_boxes_X)
+  for box in bounding_boxes_X:
+    bounding_boxes_Y.append(model.predict(box))
+  
+  # Bounding box sizes
+  np_bounding_box_sizes = np.array(bounding_box_sizes)
+  bounding_box_sizes_X = np_bounding_box_sizes
+
+
+  # Process the centers
   np_centers = np.array(centers)
   shift = np.array([crop_x, crop_y])
-  # for center in centers:
-  #   original_center = np.add(np_centers, shift)
-  #   X.append(original_center)
   center_X = np.add(np_centers, shift)
-  # X = centers
+  center_Y = model.predict(center_X)
+
+  # Display the detection results
   cv.imshow("Result", detected)
   cv.imshow("Blur", blur)
   cv.imshow("Edge", edged)
-
-  Y = []
-  boxes_Y = []
-  boxes_X = np.array(boxes_X)
-  for box in boxes_X:
-    boxes_Y.append(model.predict(box))
-
-  center_Y = model.predict(center_X)
-
-  
-  # (tl, tr, br, bl) = Y
-  # size_ind = []
-  # for size in sizes:
-  #   if size < 50:
-  #     size_ind.append(0) #M3
-  #   elif 50 <= size < 92:
-  #     size_ind.append(1) #M4
-  #   elif size > 93:
-  #     size_ind.append(2) #M5
   
   if cv.waitKey(1) & 0xFF == ord('q'):
     break
 
+# Clean up openCV
 cap.release()
 cv.destroyAllWindows()
 
-print(boxes_Y)
-areas = calculate_contour_areas(boxes_Y)
-print(areas)
+# List of variables
+# center_Y => Coordinates of the center of the detected nuts in projector frame
+# bounding_box_sizes_X => Sizes of the bounding boxes of the detected nuts in camera frame
+# bounding_boxes_Y => Coordinates of the bounding boxes of the detected nuts in projector frame
+# min_box_sizes_X => Sizes of the minimum boxes of the detected nuts in camera frame
+# min_boxes_Y => Coordinates of the minimum boxes of the detected nuts in projector frame
+# contour_sizes_X => Sizes of the contours of the detected nuts in camera frame
+# contours_Y => Coordinates of the contours of the detected nuts in projector frame
+
+# Process the contours
+contour_sizes_Y = calculate_contour_areas(contours_Y)
+
+# Process the mininmum boxes
+min_box_sizes_Y = calculate_contour_areas(min_boxes_Y)
+
+# Process the bounding boxes
+bounding_box_sizes_Y = calculate_contour_areas(bounding_boxes_Y)
+
+# Print out the results
+print("Center of the detected nuts in projector frame:")
+print(center_Y)
+print("Sizes of the bounding boxes of the detected nuts in camera frame:")
+print(bounding_box_sizes_X)
+print("Sizes of the bounding boxes of the detected nuts in projector frame:")
+print(bounding_box_sizes_Y)
+print("Sizes of the minimum boxes of the detected nuts in camera frame:")
+print(min_box_sizes_X)
+print("Sizes of the minimum boxes of the detected nuts in projector frame:")
+print(min_box_sizes_Y)
+print("Sizes of the contours of the detected nuts in camera frame:")
+print(contour_sizes_X)
+print("Sizes of the contours of the detected nuts in projector frame:")
+print(contour_sizes_Y)
+
+
+# Select what variable to use for area
+areas = contour_sizes_X
 size_ind = []
 for area in areas:
   if area < 700:
@@ -77,6 +147,8 @@ for area in areas:
     size_ind.append(1) #M4
   elif 1050 <= area:
     size_ind.append(2) #M5
+
+# Tkinter for display
 class CircleGridApp:
     def __init__(self, root, circle_radius=50):
         self.root = root
