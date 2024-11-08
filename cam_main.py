@@ -9,6 +9,46 @@ import tkinter as tk
 
 model = joblib.load('new_linear_regression_model.pkl')
 
+# Nut types to class
+# M3 = 0
+# M4 = 1
+# M5 = 2
+training_mode = False
+trained_class = 0
+
+NEURAL_NETWORK = 'neural_network'
+NAIVE_BAYES = 'naive_bayes'
+DECISION_TREE = 'decision_tree'
+RANDOM_FOREST = 'random_forest'
+SVM = 'svm'
+KNN = 'knn'
+
+# Choose model to use to predict
+classification_model = {
+  'neural_network': './model/models/nut_classifier_weights.pth',
+  'naive_bayes': './model/models/naive_bayes_model.pkl',
+  'decision_tree': './model/models/decision_tree_model.pkl',
+  'random_forest': './model/models/random_forest_model.pkl',
+  'svm': './model/models/svm_model.pkl',
+  'knn': './model/models/knn_model.pkl'
+}
+# Choose the model to use
+model_choice = RANDOM_FOREST  # Change to 'neural_network', 'naive_bayes', 'decision_tree', 'random_forest', 'svm', or 'knn'
+model_path = classification_model[model_choice]
+
+
+# Define the crop regions - adjust as needed
+crop_regions = {
+    "none": (0, 0, 640, 480),  # top-left x, y, width, height
+    "top": (200, 300, 200, 100),  # top-left x, y, width, height
+    "bottom": (250, 150, 200, 100),  # top-left x, y, width, height
+    "all": (100, 150, 400, 250),
+    "center": (200, 200, 200, 200)
+}
+
+# Choose the crop region
+crop_choice = "center"  # Change to "none", "top", "bottom", "all", or "center"
+crop_region = crop_regions[crop_choice]
 # Crop for top camera
 # crop_x, crop_y, crop_width, crop_height = 200, 300, 200, 100  # top-left x, y, width, height
 
@@ -22,7 +62,7 @@ model = joblib.load('new_linear_regression_model.pkl')
 # crop_x, crop_y, crop_width, crop_height = 100, 150, 400, 250  # top-left x, y, width, height
 
 # Crop for center camera
-crop_x, crop_y, crop_width, crop_height = 200, 200, 200, 200  # top-left x, y, width, height
+# crop_x, crop_y, crop_width, crop_height = 200, 200, 200, 200  # top-left x, y, width, height
 
 cap = cv.VideoCapture(1)
 
@@ -33,8 +73,11 @@ while cap.isOpened():
   if not ret:
     break
   
-  # Crop the frame to the defined region
+  # Crop the frame to the defined region if cropping is enabled
+  crop_x, crop_y, crop_width, crop_height = crop_region
   cropped_frame = frame[crop_y:crop_y + crop_height, crop_x:crop_x + crop_width]
+  # Crop the frame to the defined region
+  # cropped_frame = frame[crop_y:crop_y + crop_height, crop_x:crop_x + crop_width]
 
   # Find nuts in the cropped frame
   detected, blur, edged, min_boxes, centers, min_box_sizes, contours, contour_sizes, bounding_boxes, bounding_box_sizes = find_nuts(cropped_frame, max_size=200)
@@ -76,13 +119,10 @@ while cap.isOpened():
 
   # Process the bounding boxes
   original_box_coords = []
-  print(bounding_boxes)
   for box in bounding_boxes:
     original_box = np.add(box, [crop_x, crop_y, 0, 0])
     original_box_coords.append(original_box)
-  print(original_box_coords)
   bounding_boxes_X = convert_boxes(original_box_coords)
-  print(bounding_boxes_X)
     # original_box_coords = convert_boxes([original_box])
     # bounding_boxes_X.append(original_box_coords)
   bounding_boxes_Y = []
@@ -132,6 +172,8 @@ min_box_sizes_Y = calculate_contour_areas(min_boxes_Y)
 bounding_box_sizes_Y = calculate_contour_areas(bounding_boxes_Y)
 
 # Print out the results
+print("Center of the detected nuts in camera frame:")
+print(center_X)
 print("Center of the detected nuts in projector frame:")
 print(center_Y)
 print("Sizes of the bounding boxes of the detected nuts in camera frame:")
@@ -147,67 +189,78 @@ print(contour_sizes_X)
 print("Sizes of the contours of the detected nuts in projector frame:")
 print(contour_sizes_Y)
 
+# Split the array center_X into two arrays center_XX and center_XY, where center_XX contains the X coordinates and center_XY contains the Y coordinates, keeping the order of the nuts
+center_XX = center_X[:, 0]
+center_XY = center_X[:, 1]
+
+# Split the array center_Y into two arrays center_YX and center_YY, where center_YX contains the X coordinates and center_YY contains the Y coordinates, keeping the order of the nuts
+center_YX = center_Y[:, 0]
+center_YY = center_Y[:, 1]
+
 # transform the list of bounding box sizes, min box sizes, contour sizes to a numpy array of 
 # nuts where each nut is an array [bounding_box_size_X, bounding_box_size_Y, min_box_size_X, min_box_size_Y, contour_size_X, contour_size_Y]
-nuts = np.array([bounding_box_sizes_X, bounding_box_sizes_Y, min_box_sizes_X, min_box_sizes_Y, contour_sizes_X, contour_sizes_Y]).T
+nuts = np.array([center_XX, center_XY, center_YX, center_YY, bounding_box_sizes_X, bounding_box_sizes_Y, min_box_sizes_X, min_box_sizes_Y, contour_sizes_X, contour_sizes_Y]).T
 
 # Use neural network to predict the type of nut
-# Load the scaler
+# Load the scaler and the model
 scaler = joblib.load('scaler.pkl')
+model = joblib.load(model_path)
 
 # Standardize the nuts
 standardized_nuts = scaler.transform(nuts)
 
+# Predict the class
+predicted_classes = model.predict(standardized_nuts)
+print(f'The predicted nut type is: {predicted_classes}')
+
 # Convert the standardized nuts to a tensor
-standardized_nuts = torch.tensor(standardized_nuts, dtype=torch.float32)
+# standardized_nuts = torch.tensor(standardized_nuts, dtype=torch.float32)
 
 # Load the neural network model
-class NutClassifier(nn.Module):
-    def __init__(self, input_size, num_classes):
-        super(NutClassifier, self).__init__()
-        self.fc1 = nn.Linear(input_size, 64)
-        self.fc2 = nn.Linear(64, 32)
-        self.fc3 = nn.Linear(32, num_classes)
+# class NutClassifier(nn.Module):
+#     def __init__(self, input_size, num_classes):
+#         super(NutClassifier, self).__init__()
+#         self.fc1 = nn.Linear(input_size, 64)
+#         self.fc2 = nn.Linear(64, 32)
+#         self.fc3 = nn.Linear(32, num_classes)
 
-    def forward(self, x):
-        x = torch.relu(self.fc1(x))
-        x = torch.relu(self.fc2(x))
-        x = self.fc3(x)
-        return x
+#     def forward(self, x):
+#         x = torch.relu(self.fc1(x))
+#         x = torch.relu(self.fc2(x))
+#         x = self.fc3(x)
+#         return x
 
 # Instantiate the model with the correct input size and number of classes
-input_size = 6  
-num_classes = 3  
-model = NutClassifier(input_size=input_size, num_classes=num_classes)
+# input_size = 6  
+# num_classes = 3  
+# model = NutClassifier(input_size=input_size, num_classes=num_classes)
+# model = joblib.load(model_path)
 
 # Load the model weights
-model.load_state_dict(torch.load('nut_classifier_weights.pth'))
-model.eval()
+# model.load_state_dict(torch.load('nut_classifier_weights.pth'))
+# model.eval()
 
 # Predict the type of nut
-nut_type = {
-    0: 'M3',
-    1: 'M4',
-    2: 'M5'
-}
-outputs = model(standardized_nuts)
-_, predicted = torch.max(outputs, 1)
+# nut_type = {
+#     0: 'M3',
+#     1: 'M4',
+#     2: 'M5'
+# }
+# outputs = model(standardized_nuts)
+# _, predicted = torch.max(outputs, 1)
 
-print(predicted.tolist())
-predicted_classes = [nut_type[pred] for pred in predicted.tolist()]
-print(f'The predicted nut type is: {predicted_classes}')
+# print(predicted.tolist())
+# predicted_classes = [nut_type[pred] for pred in predicted.tolist()]
+# print(f'The predicted nut type is: {predicted_classes}')
 
 # create a variable for stroing nut type
 # nut_types = nut_type[predicted.item()]
-nut_types = predicted.tolist()
+# nut_types = predicted.tolist()
 
-# Nut types to class
-# M3 = 0
-# M4 = 1
-# M5 = 2
-#  Add more nuts to the csv file
-for i in range(len(bounding_box_sizes_X)):
-  add_to_csv(bounding_box_sizes_X[i], bounding_box_sizes_Y[i], min_box_sizes_X[i], min_box_sizes_Y[i], contour_sizes_X[i], contour_sizes_Y[i], 1)
+if training_mode:
+  #  Add more nuts to the csv file
+  for i in range(len(bounding_box_sizes_X)):
+    add_to_csv(center_XX[i], center_XY[i], center_YX[i], center_YY[i], bounding_box_sizes_X[i], bounding_box_sizes_Y[i], min_box_sizes_X[i], min_box_sizes_Y[i], contour_sizes_X[i], contour_sizes_Y[i], trained_class)
 
 
 # Select what variable to use for area
@@ -251,7 +304,7 @@ class CircleGridApp:
 
         # Draw the initial 9 circles
         for i, coor in enumerate(center_Y):
-          self.draw_circle(coor, 30, nut_types[i])
+          self.draw_circle(coor, 30, predicted_classes[i])
         # self.draw_line()
         # self.draw_poly((453, 533), (487, 526), (497, 560), (463, 571))
         # self.draw_poly((595, 728), (619, 728), (619, 754), (595, 754))
