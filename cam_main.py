@@ -6,6 +6,7 @@ from nut_classifier.model import find_nuts, calculate_contour_areas, convert_con
 from camconfirm import find_nut_circle
 import joblib
 import tkinter as tk
+from collections import Counter
 
 model = joblib.load('new_linear_regression_model.pkl')
 
@@ -33,7 +34,7 @@ classification_model = {
   'knn': './model/models/knn_model.pkl'
 }
 # Choose the model to use
-model_choice = RANDOM_FOREST  # Change to 'neural_network', 'naive_bayes', 'decision_tree', 'random_forest', 'svm', or 'knn'
+model_choice = SVM  # Change to 'neural_network', 'naive_bayes', 'decision_tree', 'random_forest', 'svm', or 'knn'
 model_path = classification_model[model_choice]
 
 
@@ -204,58 +205,80 @@ nuts = np.array([center_XX, center_XY, center_YX, center_YY, bounding_box_sizes_
 # Use neural network to predict the type of nut
 # Load the scaler and the model
 scaler = joblib.load('scaler.pkl')
-model = joblib.load(model_path)
+# model = joblib.load(model_path)
 
 # Standardize the nuts
 standardized_nuts = scaler.transform(nuts)
 
-# Predict the class
-predicted_classes = model.predict(standardized_nuts)
-print(f'The predicted nut type is: {predicted_classes}')
-
-# Convert the standardized nuts to a tensor
-# standardized_nuts = torch.tensor(standardized_nuts, dtype=torch.float32)
+# Try all models and vote for the most common prediction
+models = [NAIVE_BAYES, DECISION_TREE, RANDOM_FOREST, SVM, KNN]
+predictions = []
+for model_name in models:
+  model_path = classification_model[model_name]
+  model = joblib.load(model_path)
+  predicted_classes = model.predict(standardized_nuts)
+  predictions.append(predicted_classes)
 
 # Load the neural network model
-# class NutClassifier(nn.Module):
-#     def __init__(self, input_size, num_classes):
-#         super(NutClassifier, self).__init__()
-#         self.fc1 = nn.Linear(input_size, 64)
-#         self.fc2 = nn.Linear(64, 32)
-#         self.fc3 = nn.Linear(32, num_classes)
+class NutClassifier(nn.Module):
+    def __init__(self, input_size, num_classes):
+        super(NutClassifier, self).__init__()
+        self.fc1 = nn.Linear(input_size, 64)
+        self.fc2 = nn.Linear(64, 32)
+        self.fc3 = nn.Linear(32, num_classes)
 
-#     def forward(self, x):
-#         x = torch.relu(self.fc1(x))
-#         x = torch.relu(self.fc2(x))
-#         x = self.fc3(x)
-#         return x
+    def forward(self, x):
+        x = torch.relu(self.fc1(x))
+        x = torch.relu(self.fc2(x))
+        x = self.fc3(x)
+        return x
 
 # Instantiate the model with the correct input size and number of classes
-# input_size = 6  
-# num_classes = 3  
-# model = NutClassifier(input_size=input_size, num_classes=num_classes)
-# model = joblib.load(model_path)
+input_size = 10
+num_classes = 3  
+model = NutClassifier(input_size=input_size, num_classes=num_classes)
 
 # Load the model weights
-# model.load_state_dict(torch.load('nut_classifier_weights.pth'))
-# model.eval()
+model.load_state_dict(torch.load('nut_classifier_weights.pth'))
+model.eval()
+
+# Convert the standardized nuts to a tensor
+standardized_nuts = torch.tensor(standardized_nuts, dtype=torch.float32)
 
 # Predict the type of nut
-# nut_type = {
-#     0: 'M3',
-#     1: 'M4',
-#     2: 'M5'
-# }
-# outputs = model(standardized_nuts)
-# _, predicted = torch.max(outputs, 1)
+nut_type = {
+    0: 'M3',
+    1: 'M4',
+    2: 'M5'
+}
+outputs = model(standardized_nuts)
+_, predicted = torch.max(outputs, 1)
 
-# print(predicted.tolist())
-# predicted_classes = [nut_type[pred] for pred in predicted.tolist()]
-# print(f'The predicted nut type is: {predicted_classes}')
+print("--------------- Neural Network -------------------")
+print(predicted.tolist())
+predicted_classes = [nut_type[pred] for pred in predicted.tolist()]
+print(f'The predicted nut type is: {predicted_classes}')
+print("--------------------------------------------------")
 
 # create a variable for stroing nut type
-# nut_types = nut_type[predicted.item()]
-# nut_types = predicted.tolist()
+nut_types = predicted.tolist()
+predictions.append(nut_types)
+
+# Transform the predictions
+predictions = np.array(predictions).T
+
+# Most common prediction
+most_common_prediction = []
+
+for prediction in predictions:
+  counter = Counter(prediction)
+  most_common_prediction.append(counter.most_common(1)[0][0])
+
+# Predict the class
+# predicted_classes = model.predict(standardized_nuts)
+print(f'The predicted nut type is: {most_common_prediction}')
+
+
 
 if training_mode:
   #  Add more nuts to the csv file
@@ -304,7 +327,7 @@ class CircleGridApp:
 
         # Draw the initial 9 circles
         for i, coor in enumerate(center_Y):
-          self.draw_circle(coor, 30, predicted_classes[i])
+          self.draw_circle(coor, 30, most_common_prediction[i])
         # self.draw_line()
         # self.draw_poly((453, 533), (487, 526), (497, 560), (463, 571))
         # self.draw_poly((595, 728), (619, 728), (619, 754), (595, 754))
