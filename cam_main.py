@@ -1,5 +1,7 @@
 import cv2 as cv
 import numpy as np
+import torch
+from torch import nn
 from nut_classifier.model import find_nuts, calculate_contour_areas, convert_contours, convert_boxes, adjust_coordinate, add_to_csv
 from camconfirm import find_nut_circle
 import joblib
@@ -145,21 +147,71 @@ print(contour_sizes_X)
 print("Sizes of the contours of the detected nuts in projector frame:")
 print(contour_sizes_Y)
 
+# transform the list of bounding box sizes, min box sizes, contour sizes to a numpy array of 
+# nuts where each nut is an array [bounding_box_size_X, bounding_box_size_Y, min_box_size_X, min_box_size_Y, contour_size_X, contour_size_Y]
+nuts = np.array([bounding_box_sizes_X, bounding_box_sizes_Y, min_box_sizes_X, min_box_sizes_Y, contour_sizes_X, contour_sizes_Y]).T
 
-for i in range(len(bounding_box_sizes_X)):
-  add_to_csv(bounding_box_sizes_X[i], bounding_box_sizes_Y[i], min_box_sizes_X[i], min_box_sizes_Y[i], contour_sizes_X[i], contour_sizes_Y[i], 5)
+# Use neural network to predict the type of nut
+# Load the scaler
+scaler = joblib.load('scaler.pkl')
+
+# Standardize the nuts
+standardized_nuts = scaler.transform(nuts)
+
+# Convert the standardized nuts to a tensor
+standardized_nuts = torch.tensor(standardized_nuts, dtype=torch.float32)
+
+# Load the neural network model
+class NutClassifier(nn.Module):
+    def __init__(self, input_size, num_classes):
+        super(NutClassifier, self).__init__()
+        self.fc1 = nn.Linear(input_size, 64)
+        self.fc2 = nn.Linear(64, 32)
+        self.fc3 = nn.Linear(32, num_classes)
+
+    def forward(self, x):
+        x = torch.relu(self.fc1(x))
+        x = torch.relu(self.fc2(x))
+        x = self.fc3(x)
+        return x
+
+# Instantiate the model with the correct input size and number of classes
+input_size = 6  
+num_classes = 3  
+model = NutClassifier(input_size=input_size, num_classes=num_classes)
+
+# Load the model weights
+model.load_state_dict(torch.load('nut_classifier.pth'))
+model.eval()
+
+# Predict the type of nut
+nut_type = {
+    0: 'M3',
+    1: 'M4',
+    2: 'M5'
+}
+outputs = model(standardized_nuts)
+_, predicted = torch.max(outputs, 1)
+print(f'The predicted nut type is: {nut_type[predicted.item()]}')
+
+# create a variable for stroing nut type
+nut_types = nut_type[predicted.item()]
+
+#  Add more nuts to the csv file
+# for i in range(len(bounding_box_sizes_X)):
+#   add_to_csv(bounding_box_sizes_X[i], bounding_box_sizes_Y[i], min_box_sizes_X[i], min_box_sizes_Y[i], contour_sizes_X[i], contour_sizes_Y[i], 5)
 
 
 # Select what variable to use for area
-areas = contour_sizes_X
-size_ind = []
-for area in areas:
-  if area < 700:
-    size_ind.append(0) #M3
-  elif 700 <= area < 1050:
-    size_ind.append(1) #M4
-  elif 1050 <= area:
-    size_ind.append(2) #M5
+# areas = contour_sizes_X
+# size_ind = []
+# for area in areas:
+#   if area < 700:
+#     size_ind.append(0) #M3
+#   elif 700 <= area < 1050:
+#     size_ind.append(1) #M4
+#   elif 1050 <= area:
+#     size_ind.append(2) #M5
 
 # Tkinter for display
 class CircleGridApp:
@@ -191,7 +243,7 @@ class CircleGridApp:
 
         # Draw the initial 9 circles
         for i, coor in enumerate(center_Y):
-          self.draw_circle(coor, 30, size_ind[i])
+          self.draw_circle(coor, 30, nut_types[i])
         # self.draw_line()
         # self.draw_poly((453, 533), (487, 526), (497, 560), (463, 571))
         # self.draw_poly((595, 728), (619, 728), (619, 754), (595, 754))
