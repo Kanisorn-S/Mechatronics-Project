@@ -181,7 +181,7 @@ num_classes = 3
 model = NutClassifier(input_size=input_size, num_classes=num_classes)
 
 # Load the model weights
-model.load_state_dict(torch.load('nut_classifier.pth'))
+model.load_state_dict(torch.load('nut_classifier_weights.pth'))
 model.eval()
 
 # Predict the type of nut
@@ -192,14 +192,22 @@ nut_type = {
 }
 outputs = model(standardized_nuts)
 _, predicted = torch.max(outputs, 1)
-print(f'The predicted nut type is: {nut_type[predicted.item()]}')
+
+print(predicted.tolist())
+predicted_classes = [nut_type[pred] for pred in predicted.tolist()]
+print(f'The predicted nut type is: {predicted_classes}')
 
 # create a variable for stroing nut type
-nut_types = nut_type[predicted.item()]
+# nut_types = nut_type[predicted.item()]
+nut_types = predicted.tolist()
 
+# Nut types to class
+# M3 = 0
+# M4 = 1
+# M5 = 2
 #  Add more nuts to the csv file
-# for i in range(len(bounding_box_sizes_X)):
-#   add_to_csv(bounding_box_sizes_X[i], bounding_box_sizes_Y[i], min_box_sizes_X[i], min_box_sizes_Y[i], contour_sizes_X[i], contour_sizes_Y[i], 5)
+for i in range(len(bounding_box_sizes_X)):
+  add_to_csv(bounding_box_sizes_X[i], bounding_box_sizes_Y[i], min_box_sizes_X[i], min_box_sizes_Y[i], contour_sizes_X[i], contour_sizes_Y[i], 1)
 
 
 # Select what variable to use for area
