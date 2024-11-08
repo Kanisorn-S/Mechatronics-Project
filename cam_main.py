@@ -15,7 +15,7 @@ model = joblib.load('new_linear_regression_model.pkl')
 # M4 = 1
 # M5 = 2
 training_mode = True
-trained_class = 1
+trained_class = 2
 
 NEURAL_NETWORK = 'neural_network'
 NAIVE_BAYES = 'naive_bayes'
