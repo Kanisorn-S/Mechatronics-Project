@@ -14,8 +14,8 @@ model = joblib.load('new_linear_regression_model.pkl')
 # M3 = 0
 # M4 = 1
 # M5 = 2
-training_mode = False
-trained_class = 0
+training_mode = True
+trained_class = 1
 
 NEURAL_NETWORK = 'neural_network'
 NAIVE_BAYES = 'naive_bayes'
@@ -48,7 +48,7 @@ crop_regions = {
 }
 
 # Choose the crop region
-crop_choice = "center"  # Change to "none", "top", "bottom", "all", or "center"
+crop_choice = "all"  # Change to "none", "top", "bottom", "all", or "center"
 crop_region = crop_regions[crop_choice]
 # Crop for top camera
 # crop_x, crop_y, crop_width, crop_height = 200, 300, 200, 100  # top-left x, y, width, height
