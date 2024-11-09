@@ -39,10 +39,10 @@ model_path = classification_model[model_choice]
 
 
 # Define the crop regions - adjust as needed
-crop_regions = {
-    "none": (0, 0, 640, 480),  # top-left x, y, width, height
-    "top": (200, 300, 200, 100),  # top-left x, y, width, height
-    "bottom": (250, 150, 200, 100),  # top-left x, y, width, height
+crop_regions = {      # top-left x, y, width, height
+    "none": (0, 0, 640, 480),  
+    "top": (200, 300, 200, 100),  
+    "bottom": (250, 150, 200, 100),  
     "all": (100, 150, 400, 250),
     "center": (200, 200, 200, 200)
 }
@@ -50,20 +50,6 @@ crop_regions = {
 # Choose the crop region
 crop_choice = "all"  # Change to "none", "top", "bottom", "all", or "center"
 crop_region = crop_regions[crop_choice]
-# Crop for top camera
-# crop_x, crop_y, crop_width, crop_height = 200, 300, 200, 100  # top-left x, y, width, height
-
-# Crop for bottom camera
-# crop_x, crop_y, crop_width, crop_height = 250, 150, 200, 100  # top-left x, y, width, height
-
-# Crop for bottom camera centered
-# crop_x, crop_y, crop_width, crop_height = 220, 140, 200, 200  # top-left x, y, width, height
-
-# Crop for all screen
-# crop_x, crop_y, crop_width, crop_height = 100, 150, 400, 250  # top-left x, y, width, height
-
-# Crop for center camera
-# crop_x, crop_y, crop_width, crop_height = 200, 200, 200, 200  # top-left x, y, width, height
 
 cap = cv.VideoCapture(1)
 
@@ -77,8 +63,6 @@ while cap.isOpened():
   # Crop the frame to the defined region if cropping is enabled
   crop_x, crop_y, crop_width, crop_height = crop_region
   cropped_frame = frame[crop_y:crop_y + crop_height, crop_x:crop_x + crop_width]
-  # Crop the frame to the defined region
-  # cropped_frame = frame[crop_y:crop_y + crop_height, crop_x:crop_x + crop_width]
 
   # Find nuts in the cropped frame
   detected, blur, edged, min_boxes, centers, min_box_sizes, contours, contour_sizes, bounding_boxes, bounding_box_sizes = find_nuts(cropped_frame, max_size=200)
