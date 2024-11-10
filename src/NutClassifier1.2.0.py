@@ -1,4 +1,5 @@
 import tkinter as tk
+from tkinter import colorchooser
 from tkinter import messagebox
 import cv2
 from PIL import Image, ImageTk
@@ -9,6 +10,31 @@ from utils.postprocess import adjust_coordinate
 
 class SidebarApp:
     def __init__(self, root):
+
+        # Nuts color and size
+        self.sizes = ["M3", "M4", "M5", "M6", "M7", "M8", "M9", "M10", "M11", "M12", "M13", "M14", "M15", "M16", "M17", "M18", "M19", "M20"]
+        self.colors = {
+            "M3": "blue",
+            "M4": "red",
+            "M5": "green",
+            "M6": "yellow",
+            "M7": "purple",
+            "M8": "orange",
+            "M9": "cyan",
+            "M10": "magenta",
+            "M11": "brown",
+            "M12": "pink",
+            "M13": "gray",
+            "M14": "black",
+            "M15": "white",
+            "M16": "light blue",
+            "M17": "light green",
+            "M18": "light yellow",
+            "M19": "light cyan",
+            "M20": "dark red"
+        }
+        self.radiuses = [10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 85, 90, 95, 100]
+
         self.root = root
         self.root.attributes("-fullscreen", False)  # Set the window to fullscreen
         #self.root.state("zoomed")
@@ -19,7 +45,7 @@ class SidebarApp:
         self.screen_height = self.root.winfo_screenheight()
 
         # Sidebar dimensions
-        self.sidebar_width = 260
+        self.sidebar_width = 360  # Increased width to ensure the entire table is visible
         self.sidebar_visible = False  # Sidebar initially hidden
         self.extra_canvas_visible = False  # Extra canvas initially hidden
 
@@ -61,11 +87,11 @@ class SidebarApp:
 
         # Table for displaying selected nuts
         self.table_canvas = tk.Canvas(self.sidebar_canvas, width=self.sidebar_width - 60, bg="white")
-        self.table_canvas.place(x=10, y=300, height=root.winfo_screenheight() * 0.65)
+        self.table_canvas.place(x=10, y=250, height=root.winfo_screenheight() * 0.65)  # Move the table up
 
         # Scrollbar and setup
         self.scrollbar_frame = tk.Frame(self.sidebar_canvas, bg="gray")
-        self.scrollbar_frame.place(x=self.sidebar_width - 50, y=300, height=root.winfo_screenheight() * 0.65)
+        self.scrollbar_frame.place(x=self.sidebar_width - 50, y=250, height=root.winfo_screenheight() * 0.65)  # Move the scrollbar up
 
         self.scrollbar = tk.Scrollbar(self.scrollbar_frame, orient="vertical", command=self.table_canvas.yview)
         self.scrollbar.pack(fill="y", expand=True)
@@ -74,38 +100,17 @@ class SidebarApp:
         self.table_frame = tk.Frame(self.table_canvas, bg="white")
         self.table_canvas.create_window((0, 0), window=self.table_frame, anchor="nw")
 
+        self.table_canvas.bind_all("<MouseWheel>", self._on_mousewheel)  # Bind mouse wheel to scroll
+
         # Initialize table and selection data
-        self.selected_nuts = []
+        self.selected_nuts = [f"M{i}" for i in range(3, 21)]  # Select all nut sizes by default
         self.nut_quantities = {
-            f"M{i}": 0 for i in range(1, 21)
+            f"M{i}": 0 for i in range(3, 21)
         }
         self.create_table()  # Create table headers
         self.update_table()  # Populate table with initial data
         self.circles = []  # Store references to drawn circles
 
-        # Nuts color and size
-        self.sizes = ["M3", "M4", "M5", "M6", "M7", "M8", "M9", "M10", "M11", "M12", "M13", "M14", "M15", "M16", "M17", "M18", "M19", "M20"]
-        self.colors = {
-            "M3": "blue",
-            "M4": "red",
-            "M5": "green",
-            "M6": "yellow",
-            "M7": "purple",
-            "M8": "orange",
-            "M9": "cyan",
-            "M10": "magenta",
-            "M11": "brown",
-            "M12": "pink",
-            "M13": "gray",
-            "M14": "black",
-            "M15": "white",
-            "M16": "blue",
-            "M17": "red",
-            "M18": "green",
-            "M19": "yellow",
-            "M20": "purple"
-        }
-        self.radiuses = [10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 85, 90, 95, 100]
 
     def create_table(self):
         # Clear existing table contents
@@ -125,7 +130,7 @@ class SidebarApp:
             color = self.colors[nut_type]
             tk.Label(self.table_frame, text=nut_type, borderwidth=1, relief="solid", width=10, height=2).grid(row=row, column=0)
             tk.Label(self.table_frame, text=quantity, borderwidth=1, relief="solid", width=10, height=2).grid(row=row, column=1)
-            color_label = tk.Label(self.table_frame, text=color, borderwidth=1, relief="solid", width=10, height=2, bg=color)
+            color_label = tk.Label(self.table_frame, borderwidth=1, relief="solid", width=10, height=2, bg=color)
             color_label.grid(row=row, column=2)
             color_label.bind("<Button-1>", lambda e, nut=nut_type: self.change_color(nut))
         self.table_frame.update_idletasks()
@@ -133,10 +138,11 @@ class SidebarApp:
 
     def change_color(self, nut):
         # Change the color of the nut
-        color = tk.colorchooser.askcolor(title=f"Choose color for {nut}")[1]
+        color = colorchooser.askcolor(title=f"Choose color for {nut}")[1]
         if color:
             self.colors[nut] = color
             self.update_table()  # Update table to reflect the new color
+            self.update_frame()
 
     def toggle_sidebar(self):
         # Toggle sidebar visibility
@@ -245,7 +251,7 @@ class SidebarApp:
             self.nut_selection_button.config(text="Nut selection")
         else:
             # Attach extra_canvas next to sidebar when visible
-            x_position = self.root.winfo_screenwidth() - self.sidebar_width - 55
+            x_position = self.root.winfo_screenwidth() - self.sidebar_width - 255
             self.extra_canvas.place(x=x_position, y=0)
             for widget in self.extra_canvas_widgets:
                 widget.grid()  # Show all widgets in the extra canvas
@@ -254,25 +260,41 @@ class SidebarApp:
 
     def create_extra_canvas(self):
         # Create checkboxes for nut selection
-        nut_options = [f"M{i}" for i in range(1, 21)]
-        for i, nut in enumerate(nut_options):
-            var = tk.BooleanVar()
+        self.select_all_var = tk.BooleanVar(value=True)
+        select_all_checkbox = tk.Checkbutton(self.extra_canvas, font=("Arial", 15), text="Select/Deselect All", variable=self.select_all_var, command=self.toggle_select_all)
+        select_all_checkbox.grid(row=0, column=0, sticky="w")
+        self.extra_canvas_widgets.append(select_all_checkbox)
+
+        nut_options = [f"M{i}" for i in range(3, 21)]
+        self.nut_vars = {}
+        for i, nut in enumerate(nut_options, start=1):
+            var = tk.BooleanVar(value=True)
             checkbox = tk.Checkbutton(self.extra_canvas, font=("Arial", 15), text=nut, variable=var, command=lambda n=nut, v=var: self.toggle_nut(n, v))
             checkbox.grid(row=i, column=0, sticky="w")
             self.extra_canvas_widgets.append(checkbox)
+            self.nut_vars[nut] = var
+
+    def toggle_select_all(self):
+        # Toggle select/deselect all nuts
+        select_all = self.select_all_var.get()
+        for nut, var in self.nut_vars.items():
+            var.set(select_all)
+            if select_all and nut not in self.selected_nuts:
+                self.selected_nuts.append(nut)
+            elif not select_all and nut in self.selected_nuts:
+                self.selected_nuts.remove(nut)
+        self.update_table()  # Update table with selected nuts
 
     def toggle_nut(self, nut, var):
         # Toggle nut selection
         if var.get():
             if nut not in self.selected_nuts:
                 self.selected_nuts.append(nut)
-                # Sort with custom key that extracts numeric part
-                self.selected_nuts.sort(key=lambda x: int(re.search(r'\d+', x).group()))
-                self.update_table()  # Update table with selected nuts
+                self.selected_nuts.sort(key=lambda x: int(re.search(r'\d+', x).group()))  # Sort with custom key that extracts numeric part
         else:
             if nut in self.selected_nuts:
                 self.selected_nuts.remove(nut)
-                self.update_table()  # Update table after removing nut
+        self.update_table()  # Update table with selected nuts
     
     def draw_circle(self, center, ind=0):
         x_offset = 125
@@ -286,6 +308,10 @@ class SidebarApp:
         circle = self.main_canvas.create_oval(x - radius, y - radius, x + radius, y + radius, fill=color, outline=color)
         text = self.main_canvas.create_text(x, y + radius + 10, text=f"{size}", fill=color)
         self.circles.extend([circle, text])  # Store references to the circle and text
+
+    def _on_mousewheel(self, event):
+        # Scroll the table with the mouse wheel
+        self.table_canvas.yview_scroll(int(-1 * (event.delta / 120)), "units")
 
 
 # Create the root Tkinter window
