@@ -5,11 +5,15 @@ from torch import nn
 import joblib
 import tkinter as tk
 from collections import Counter
+import os
 from utils.postprocess import convert_contours, calculate_contour_areas, convert_boxes, adjust_coordinate
 from utils.model import find_nuts
 from utils.train import add_to_csv
 
-model = joblib.load('new_linear_regression_model.pkl')
+# Get the directory of the current file
+current_dir = os.path.dirname(os.path.abspath(__file__))
+
+model = joblib.load(os.path.join(current_dir, './model/models/new_linear_regression_model.pkl'))
 
 # Nut types to class
 # M3 = 0
@@ -52,7 +56,7 @@ crop_regions = {      # top-left x, y, width, height
 crop_choice = "all"  # Change to "none", "top", "bottom", "all", or "center"
 crop_region = crop_regions[crop_choice]
 
-cap = cv.VideoCapture(1)
+cap = cv.VideoCapture(0)
 
 while cap.isOpened():
   
@@ -224,7 +228,7 @@ num_classes = 3
 model = NutClassifier(input_size=input_size, num_classes=num_classes)
 
 # Load the model weights
-model.load_state_dict(torch.load('./model/models/;nut_classifier_weights.pth'))
+model.load_state_dict(torch.load('./model/models/nut_classifier_weights.pth'))
 model.eval()
 
 # Convert the standardized nuts to a tensor

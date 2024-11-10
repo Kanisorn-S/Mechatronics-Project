@@ -11,7 +11,7 @@ from imutils import contours
 import numpy as np
 import imutils
 import cv2
-from postprocess import contour_to_points
+from utils.postprocess import contour_to_points
 
 def find_nuts(image, min_size=0, max_size=10000000000):
   
