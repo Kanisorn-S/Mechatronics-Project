@@ -33,10 +33,10 @@ class SidebarApp:
             "M19": "light cyan",
             "M20": "dark red"
         }
-        self.radiuses = [10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 85, 90, 95, 100]
+        self.radiuses = [20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 85, 90, 95, 100, 105]
 
         self.root = root
-        self.root.attributes("-fullscreen", False)  # Set the window to fullscreen
+        self.root.attributes("-fullscreen", True)  # Set the window to fullscreen
         #self.root.state("zoomed")
         self.root.configure(bg="black")  # Set background color to black
 
@@ -50,11 +50,13 @@ class SidebarApp:
         self.extra_canvas_visible = False  # Extra canvas initially hidden
 
         # Main canvas for webcam display
-        self.main_canvas = tk.Canvas(self.root, bg="black")
+        self.main_canvas = tk.Canvas(self.root, width=self.screen_width, height=self.screen_height, bg="white", highlightbackground="black", highlightthickness=10)
         self.main_canvas.pack(fill="both", expand=True)  # Fill the entire window
+        # self.border_frame = tk.Frame(self.main_canvas, bg="black", highlightbackground="black", highlightthickness=10)
+        # self.border_frame.pack(fill="both", expand=True)
 
         # Sidebar canvas with camera control buttons
-        self.sidebar_canvas = tk.Canvas(self.root, width=self.sidebar_width, height=root.winfo_screenheight(), bg="gray")
+        self.sidebar_canvas = tk.Canvas(self.root, width=self.sidebar_width, height=root.winfo_screenheight(), bg="gray", highlightthickness=0)
         self.sidebar_canvas.place(x=root.winfo_screenwidth(), y=0)  # Place out of bounds initially
 
         # Sidebar toggle button to open/close sidebar
@@ -110,6 +112,8 @@ class SidebarApp:
         self.create_table()  # Create table headers
         self.update_table()  # Populate table with initial data
         self.circles = []  # Store references to drawn circles
+
+        self.update_frame_id = None
 
 
     def create_table(self):
@@ -169,13 +173,17 @@ class SidebarApp:
             self.main_canvas.delete("all")  # Clear the main canvas
             if self.cap:
                 self.cap.release()  # Release the video capture object
+            # self.border_frame.config(highlightbackground="black")  # Remove green border
+            self.main_canvas.config(highlightbackground="black", highlightthickness=10)  # Add thicker and brighter green border
         else:
-            self.cap = cv2.VideoCapture(0)  # Open the default camera
+            self.cap = cv2.VideoCapture(1)  # Open the default camera
             while not self.cap.isOpened():
-                print("Camera not detected. Trying again...")
+                print("Waiting for camera...")
             print("Camera detected.")
             self.camera_on = True
             self.freeze = False
+            self.main_canvas.config(highlightbackground="#00FF00", highlightthickness=10)  # Add thicker and brighter green border
+            # self.border_frame.config(highlightbackground="#00FF00", highlightthickness=10)  # Add thicker and brighter green border
             self.update_frame()  # Start updating frames
 
     def update_frame(self):
@@ -183,20 +191,20 @@ class SidebarApp:
         if self.camera_on and not self.freeze:
             ret, frame = self.cap.read()
             if ret:
-                height, width = frame.shape[:2]
-                aspect_ratio = width / height
-                new_width = self.root.winfo_screenwidth() - self.sidebar_width
-                new_height = int(new_width / aspect_ratio)
-                frame = cv2.resize(frame, (new_width, new_height))
-                frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-                img = Image.fromarray(frame)
-                img_tk = ImageTk.PhotoImage(img)
-                self.main_canvas.create_image(0, 0, anchor="nw", image=img_tk)
-                self.main_canvas.image = img_tk
+                # height, width = frame.shape[:2]
+                # aspect_ratio = width / height
+                # new_width = self.root.winfo_screenwidth() - self.sidebar_width
+                # new_height = int(new_width / aspect_ratio)
+                # frame = cv2.resize(frame, (new_width, new_height))
+                # frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+                # img = Image.fromarray(frame)
+                # img_tk = ImageTk.PhotoImage(img)
+                # self.main_canvas.create_image(0, 0, anchor="nw", image=img_tk)
+                # self.main_canvas.image = img_tk
                 # Redraw circles to ensure they remain visible
                 for circle in self.circles:
                     self.main_canvas.tag_raise(circle)
-            self.root.after(100, self.update_frame)  # Schedule the next frame update
+            self.update_frame_id = self.root.after(100, self.update_frame)  # Schedule the next frame update
 
     def toggle_freeze(self):
         # Toggle freeze/unfreeze frame
@@ -207,6 +215,9 @@ class SidebarApp:
     def capture_image(self):
         # Capture and save the current frame
         if self.camera_on:
+            if self.update_frame_id is not None:
+                self.root.after_cancel(self.update_frame_id)
+                self.update_frame_id = None
             self.clear_nut_quantities()
             ret, frame = self.cap.read()
             if not ret:
@@ -221,6 +232,7 @@ class SidebarApp:
                 if self.sizes[predictions[i]] in self.selected_nuts:
                     self.draw_circle(center, predictions[i])
             self.update_table_with_predictions(predictions)  # Update table with predictions
+            self.update_frame()
 
     def clear_nut_quantities(self):
         # Clear all nut quantities
@@ -230,7 +242,6 @@ class SidebarApp:
     def update_table_with_predictions(self, predictions):
         # Update the table according to predictions
         nut_sizes = [f"M{i}" for i in range(3, 21)]
-        print(nut_sizes)
         for prediction in predictions:
             nut_size = nut_sizes[prediction]
             self.nut_quantities[nut_size] += 1

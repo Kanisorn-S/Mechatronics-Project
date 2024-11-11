@@ -56,7 +56,7 @@ crop_regions = {      # top-left x, y, width, height
 crop_choice = "all"  # Change to "none", "top", "bottom", "all", or "center"
 crop_region = crop_regions[crop_choice]
 
-cap = cv.VideoCapture(0)
+cap = cv.VideoCapture(1)
 
 while cap.isOpened():
   
