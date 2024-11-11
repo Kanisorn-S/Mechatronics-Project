@@ -115,6 +115,10 @@ class SidebarApp:
 
         self.update_frame_id = None
 
+        # Debug
+        self.cap_count = 0
+        self.file_path = './debug/images/'
+
 
     def create_table(self):
         # Clear existing table contents
@@ -179,7 +183,6 @@ class SidebarApp:
             self.cap = cv2.VideoCapture(1)  # Open the default camera
             while not self.cap.isOpened():
                 print("Waiting for camera...")
-            print("Camera detected.")
             self.camera_on = True
             self.freeze = False
             self.main_canvas.config(highlightbackground="#00FF00", highlightthickness=10)  # Add thicker and brighter green border
@@ -208,16 +211,15 @@ class SidebarApp:
 
     def toggle_freeze(self):
         # Toggle freeze/unfreeze frame
-        self.freeze = not self.freeze
-        if not self.freeze:
-            self.update_frame()  # Resume frame updates if unfreezing
+        # self.freeze = not self.freeze
+        # if not self.freeze:
+        #     self.update_frame()  # Resume frame updates if unfreezing
+        self.clear_circles()
 
     def capture_image(self):
         # Capture and save the current frame
         if self.camera_on:
-            if self.update_frame_id is not None:
-                self.root.after_cancel(self.update_frame_id)
-                self.update_frame_id = None
+            self.clear_circles()
             self.clear_nut_quantities()
             ret, frame = self.cap.read()
             if not ret:
@@ -226,13 +228,12 @@ class SidebarApp:
             detected, blur, edged, min_boxes, centers, min_box_sizes, contours, contour_sizes, bounding_boxes, bounding_box_sizes = detect_nuts(frame, crop_region)
             nuts, center_Y = process_nuts(detected, blur, edged, min_boxes, centers, min_box_sizes, contours, contour_sizes, bounding_boxes, bounding_box_sizes, crop_region)
             predictions = predict_nut_types(nuts)
-            print(predictions)
-            self.clear_circles()  # Clear existing circles
+            cv2.imwrite(f"{self.file_path}image_{self.cap_count}.jpg", detected)
+            self.cap_count += 1
             for i, center in enumerate(center_Y):
                 if self.sizes[predictions[i]] in self.selected_nuts:
                     self.draw_circle(center, predictions[i])
             self.update_table_with_predictions(predictions)  # Update table with predictions
-            self.update_frame()
 
     def clear_nut_quantities(self):
         # Clear all nut quantities
@@ -250,9 +251,12 @@ class SidebarApp:
 
     def clear_circles(self):
         # Clear all drawn circles
-        for circle in self.circles:
-            self.main_canvas.delete(circle)
-        self.circles = []
+        if hasattr(self, "circles"):
+            print(self.circles)
+            for circle in self.circles:
+                self.main_canvas.delete(circle)
+            self.circles = []
+            self.main_canvas.update_idletasks()
 
     def toggle_nut_selection(self):
         # Toggle nut selection canvas visibility
