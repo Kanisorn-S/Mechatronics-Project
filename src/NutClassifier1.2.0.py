@@ -1,4 +1,7 @@
 import tkinter as tk
+import win32gui
+import win32con
+import win32api
 from tkinter import colorchooser
 from tkinter import messagebox
 import cv2
@@ -52,12 +55,19 @@ class SidebarApp:
         # Main canvas for webcam display
         self.main_canvas = tk.Canvas(self.root, width=self.screen_width, height=self.screen_height, bg="white", highlightbackground="black", highlightthickness=10)
         self.main_canvas.pack(fill="both", expand=True)  # Fill the entire window
-        # self.border_frame = tk.Frame(self.main_canvas, bg="black", highlightbackground="black", highlightthickness=10)
-        # self.border_frame.pack(fill="both", expand=True)
 
         # Sidebar canvas with camera control buttons
-        self.sidebar_canvas = tk.Canvas(self.root, width=self.sidebar_width, height=root.winfo_screenheight(), bg="gray", highlightthickness=0)
+        self.sidebar_canvas = tk.Canvas(self.root, width=self.sidebar_width, height=root.winfo_screenheight(), bg="#808080", highlightthickness=0)
         self.sidebar_canvas.place(x=root.winfo_screenwidth(), y=0)  # Place out of bounds initially
+        # Make Sidebar Transparent
+        hwnd = self.sidebar_canvas.winfo_id()
+        colorKey = win32api.RGB(128, 128, 128)
+        wnd_exstyle = win32gui.GetWindowLong(hwnd, win32con.GWL_EXSTYLE)
+        new_exstyle = wnd_exstyle | win32con.WS_EX_LAYERED
+        win32gui.SetWindowLong(hwnd, win32con.GWL_EXSTYLE, new_exstyle)
+        win32gui.SetLayeredWindowAttributes(hwnd, colorKey, 200, win32con.LWA_ALPHA)
+
+          
 
         # Sidebar toggle button to open/close sidebar
         self.toggle_button = tk.Button(self.root, text="<", command=self.toggle_sidebar, font=("Arial", 16))
@@ -72,11 +82,12 @@ class SidebarApp:
         self.on_off_button = tk.Button(self.sidebar_canvas, text="On/Off", command=self.toggle_camera, font=("Arial", 15))
         self.on_off_button.place(x=100, y=50, anchor="center")
 
-        self.freeze_button = tk.Button(self.sidebar_canvas, text="Freeze/Unfreeze", command=self.toggle_freeze, font=("Arial", 15))
-        self.freeze_button.place(x=100, y=100, anchor="center")
-
         self.capture_button = tk.Button(self.sidebar_canvas, text="Capture", command=self.capture_image, font=("Arial", 15))
-        self.capture_button.place(x=100, y=150, anchor="center")
+        self.capture_button.place(x=100, y=100, anchor="center")
+
+        self.clear_button = tk.Button(self.sidebar_canvas, text="Clear", command=self.toggle_freeze, font=("Arial", 15))
+        self.clear_button.place(x=100, y=150, anchor="center")
+
 
         self.nut_selection_button = tk.Button(self.sidebar_canvas, text="Nut selection", command=self.toggle_nut_selection, font=("Arial", 15))
         self.nut_selection_button.place(x=100, y=200, anchor="center")
@@ -215,6 +226,8 @@ class SidebarApp:
         # if not self.freeze:
         #     self.update_frame()  # Resume frame updates if unfreezing
         self.clear_circles()
+        self.clear_nut_quantities()
+        self.update_table()
 
     def capture_image(self):
         # Capture and save the current frame
@@ -224,7 +237,7 @@ class SidebarApp:
             ret, frame = self.cap.read()
             if not ret:
                 return
-            crop_region = crop_regions["all"]
+            crop_region = crop_regions["real"]
             detected, blur, edged, min_boxes, centers, min_box_sizes, contours, contour_sizes, bounding_boxes, bounding_box_sizes = detect_nuts(frame, crop_region)
             nuts, center_Y = process_nuts(detected, blur, edged, min_boxes, centers, min_box_sizes, contours, contour_sizes, bounding_boxes, bounding_box_sizes, crop_region)
             predictions = predict_nut_types(nuts)

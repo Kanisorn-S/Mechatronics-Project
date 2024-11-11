@@ -17,7 +17,7 @@ crop_region = crop_regions[crop_choice]
 draw_grid = True
 
 # Open the video feed (or image)
-cap = cv2.VideoCapture(0)  # or a path to a video file
+cap = cv2.VideoCapture(1)  # or a path to a video file
 
 while True:
     ret, frame = cap.read()
