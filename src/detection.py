@@ -51,6 +51,7 @@ crop_regions = {      # top-left x, y, width, height
     "all": (100, 150, 400, 250),
     "center": (200, 200, 200, 200),
     "real": (200, 150, 325, 250),
+    "machine": (250, 225, 225, 150),
 }
 
 # Choose the crop region

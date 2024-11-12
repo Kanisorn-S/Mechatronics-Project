@@ -6,7 +6,8 @@ crop_regions = {
     "top": (200, 300, 200, 100),  # top-left x, y, width, height
     "bottom": (250, 150, 200, 100),  # top-left x, y, width, height
     "all": (100, 150, 400, 250),
-    "center": (200, 200, 200, 200)
+    "center": (200, 200, 200, 200),
+    "machine": (250, 225, 225, 175)
 }
 
 # Choose the crop region
@@ -17,7 +18,7 @@ crop_region = crop_regions[crop_choice]
 draw_grid = True
 
 # Open the video feed (or image)
-cap = cv2.VideoCapture(1)  # or a path to a video file
+cap = cv2.VideoCapture(1, cv2.CAP_DSHOW)  # or a path to a video file
 
 while True:
     ret, frame = cap.read()

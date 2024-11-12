@@ -7,6 +7,7 @@ from tkinter import messagebox
 import cv2
 from PIL import Image, ImageTk
 import os, re, sys
+import threading  # Import threading module
 from detection import detect_nuts, process_nuts, predict_nut_types, crop_regions
 from utils.postprocess import adjust_coordinate
 
@@ -67,7 +68,9 @@ class SidebarApp:
         win32gui.SetWindowLong(hwnd, win32con.GWL_EXSTYLE, new_exstyle)
         win32gui.SetLayeredWindowAttributes(hwnd, colorKey, 200, win32con.LWA_ALPHA)
 
-          
+        self.loading_popup = None
+        self.loading_bar = None
+        self.loading_label = None
 
         # Sidebar toggle button to open/close sidebar
         self.toggle_button = tk.Button(self.root, text="<", command=self.toggle_sidebar, font=("Arial", 16))
@@ -116,7 +119,7 @@ class SidebarApp:
         self.table_canvas.bind_all("<MouseWheel>", self._on_mousewheel)  # Bind mouse wheel to scroll
 
         # Initialize table and selection data
-        self.selected_nuts = [f"M{i}" for i in range(3, 21)]  # Select all nut sizes by default
+        self.selected_nuts = [f"M{i}" for i in range(3, 6)]  # Select all nut sizes by default
         self.nut_quantities = {
             f"M{i}": 0 for i in range(3, 21)
         }
@@ -188,17 +191,55 @@ class SidebarApp:
             self.main_canvas.delete("all")  # Clear the main canvas
             if self.cap:
                 self.cap.release()  # Release the video capture object
-            # self.border_frame.config(highlightbackground="black")  # Remove green border
             self.main_canvas.config(highlightbackground="black", highlightthickness=10)  # Add thicker and brighter green border
         else:
-            self.cap = cv2.VideoCapture(1)  # Open the default camera
-            while not self.cap.isOpened():
-                print("Waiting for camera...")
-            self.camera_on = True
-            self.freeze = False
-            self.main_canvas.config(highlightbackground="#00FF00", highlightthickness=10)  # Add thicker and brighter green border
-            # self.border_frame.config(highlightbackground="#00FF00", highlightthickness=10)  # Add thicker and brighter green border
-            self.update_frame()  # Start updating frames
+            self.show_loading_popup()
+            threading.Thread(target=self.initialize_camera).start()  # Run initialize_camera in a separate thread
+            self.update_loading_bar(0)  # Start updating the loading bar
+
+    def show_loading_popup(self):
+        # Create a popup window with a loading bar
+        self.loading_popup = tk.Toplevel(self.root)
+        self.loading_popup.geometry("300x150")
+        self.loading_popup.title("Initializing Camera")
+        self.loading_popup.transient(self.root)
+        self.loading_popup.grab_set()
+        self.loading_popup.attributes("-topmost", True)
+
+        # Center the popup window
+        x = (self.root.winfo_screenwidth() // 2) - (300 // 2)
+        y = (self.root.winfo_screenheight() // 2) - (150 // 2)
+        self.loading_popup.geometry(f"+{x}+{y}")
+
+        self.loading_label = tk.Label(self.loading_popup, text="Initializing Camera..", font=("Arial", 12))
+        self.loading_label.pack(pady=10)
+
+        self.loading_bar = tk.Canvas(self.loading_popup, width=200, height=20, bg="white", highlightthickness=1, highlightbackground="black")
+        self.loading_bar.pack(pady=10)
+        self.loading_bar.create_rectangle(0, 0, 0, 20, fill="green", tags="progress")
+
+    def update_loading_bar(self, value):
+        # Update the loading bar
+        self.loading_bar.coords("progress", 0, 0, value * 2, 20)
+        if value <= 100:
+            self.root.after(570, self.update_loading_bar, value + 1)
+        else:
+            self.loading_label.config(text="Camera Ready")
+            self.root.after(500, self.close_loading_popup)
+
+    def close_loading_popup(self):
+        # Close the loading popup
+        if self.loading_popup:
+            self.loading_popup.destroy()
+            self.loading_popup = None
+
+    def initialize_camera(self):
+        # Initialize the camera
+        self.cap = cv2.VideoCapture(1, cv2.CAP_DSHOW)  # Open the default camera
+        self.camera_on = True
+        self.freeze = False
+        self.main_canvas.config(highlightbackground="#00FF00", highlightthickness=10)  # Add thicker and brighter green border
+        self.update_frame()  # Start updating frames
 
     def update_frame(self):
         # Update the frame from the camera
@@ -237,7 +278,7 @@ class SidebarApp:
             ret, frame = self.cap.read()
             if not ret:
                 return
-            crop_region = crop_regions["real"]
+            crop_region = crop_regions["machine"]
             detected, blur, edged, min_boxes, centers, min_box_sizes, contours, contour_sizes, bounding_boxes, bounding_box_sizes = detect_nuts(frame, crop_region)
             nuts, center_Y = process_nuts(detected, blur, edged, min_boxes, centers, min_box_sizes, contours, contour_sizes, bounding_boxes, bounding_box_sizes, crop_region)
             predictions = predict_nut_types(nuts)
@@ -265,7 +306,6 @@ class SidebarApp:
     def clear_circles(self):
         # Clear all drawn circles
         if hasattr(self, "circles"):
-            print(self.circles)
             for circle in self.circles:
                 self.main_canvas.delete(circle)
             self.circles = []
@@ -288,7 +328,7 @@ class SidebarApp:
 
     def create_extra_canvas(self):
         # Create checkboxes for nut selection
-        self.select_all_var = tk.BooleanVar(value=True)
+        self.select_all_var = tk.BooleanVar(value=False)
         select_all_checkbox = tk.Checkbutton(self.extra_canvas, font=("Arial", 15), text="Select/Deselect All", variable=self.select_all_var, command=self.toggle_select_all)
         select_all_checkbox.grid(row=0, column=0, sticky="w")
         self.extra_canvas_widgets.append(select_all_checkbox)
@@ -296,7 +336,10 @@ class SidebarApp:
         nut_options = [f"M{i}" for i in range(3, 21)]
         self.nut_vars = {}
         for i, nut in enumerate(nut_options, start=1):
-            var = tk.BooleanVar(value=True)
+            if i < 4:
+                var = tk.BooleanVar(value=True)
+            else:
+                var = tk.BooleanVar(value=False)
             checkbox = tk.Checkbutton(self.extra_canvas, font=("Arial", 15), text=nut, variable=var, command=lambda n=nut, v=var: self.toggle_nut(n, v))
             checkbox.grid(row=i, column=0, sticky="w")
             self.extra_canvas_widgets.append(checkbox)
