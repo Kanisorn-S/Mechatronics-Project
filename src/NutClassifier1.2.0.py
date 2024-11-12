@@ -235,7 +235,7 @@ class SidebarApp:
 
     def initialize_camera(self):
         # Initialize the camera
-        self.cap = cv2.VideoCapture(1, cv2.CAP_DSHOW)  # Open the default camera
+        self.cap = cv2.VideoCapture(1)  # Open the default camera
         self.camera_on = True
         self.freeze = False
         self.main_canvas.config(highlightbackground="#00FF00", highlightthickness=10)  # Add thicker and brighter green border
