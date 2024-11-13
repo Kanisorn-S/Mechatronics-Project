@@ -88,6 +88,9 @@ class SidebarApp:
         self.capture_button = tk.Button(self.sidebar_canvas, text="Capture", command=self.capture_image, font=("Arial", 15))
         self.capture_button.place(x=100, y=100, anchor="center")
 
+        self.sort_button = tk.Button(self.sidebar_canvas, text="Sort", command=self.sort_nuts, font=("Arial", 15))
+        self.sort_button.place(x=200, y=100, anchor="center")
+
         self.clear_button = tk.Button(self.sidebar_canvas, text="Clear", command=self.toggle_freeze, font=("Arial", 15))
         self.clear_button.place(x=100, y=150, anchor="center")
 
@@ -383,6 +386,10 @@ class SidebarApp:
     def _on_mousewheel(self, event):
         # Scroll the table with the mouse wheel
         self.table_canvas.yview_scroll(int(-1 * (event.delta / 120)), "units")
+
+    def sort_nuts(self):
+        # Placeholder function for sorting nuts
+        pass
 
 
 # Create the root Tkinter window
