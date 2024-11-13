@@ -391,13 +391,16 @@ class SidebarApp:
         self.circles.extend([circle, text])  # Store references to the circle and text
 
     def draw_path(self, path):
-        # Draw lines connecting the coordinates in the path
+        # Draw lines connecting the coordinates in the path and display step numbers
         if len(path) < 2:
             return
         for i in range(len(path) - 1):
             x1, y1 = path[i]
             x2, y2 = path[i + 1]
             self.main_canvas.create_line(x1, y1, x2, y2, fill="red", width=2)
+            step_number = i + 1
+            mid_x, mid_y = (x1 + x2) / 2, (y1 + y2) / 2
+            self.main_canvas.create_text(mid_x, mid_y, text=str(step_number), fill="blue", font=("Arial", 12, "bold"))
 
     def _on_mousewheel(self, event):
         # Scroll the table with the mouse wheel
