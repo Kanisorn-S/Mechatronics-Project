@@ -10,6 +10,7 @@ import os, re, sys
 import threading  # Import threading module
 from detection import detect_nuts, process_nuts, predict_nut_types, crop_regions
 from utils.postprocess import adjust_coordinate
+from utils.sorting import sort_nuts, generate_sweep_path, collection_zones, free_level_y
 
 
 class SidebarApp:
@@ -389,13 +390,25 @@ class SidebarApp:
         text = self.main_canvas.create_text(x, y + radius + 10, text=f"{size}", fill=color)
         self.circles.extend([circle, text])  # Store references to the circle and text
 
+    def draw_path(self, path):
+        # Draw lines connecting the coordinates in the path
+        if len(path) < 2:
+            return
+        for i in range(len(path) - 1):
+            x1, y1 = path[i]
+            x2, y2 = path[i + 1]
+            self.main_canvas.create_line(x1, y1, x2, y2, fill="red", width=2)
+
     def _on_mousewheel(self, event):
         # Scroll the table with the mouse wheel
         self.table_canvas.yview_scroll(int(-1 * (event.delta / 120)), "units")
 
     def sort_nuts(self):
         # Placeholder function for sorting nuts
-        pass
+        if self.center_Y:
+            nuts = sort_nuts(self.center_Y, self.predictions)
+            path = generate_sweep_path(nuts, collection_zones, free_level_y)
+            self.draw_path(path)
 
 
 # Create the root Tkinter window
