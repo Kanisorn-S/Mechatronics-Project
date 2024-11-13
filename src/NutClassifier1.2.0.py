@@ -131,7 +131,11 @@ class SidebarApp:
         self.circles = []  # Store references to drawn circles
 
         self.update_frame_id = None
-
+        
+        # Save nuts variables
+        self.center_Y = []
+        self.predictions = []
+        
         # Debug
         self.cap_count = 0
         self.file_path = './debug/images/'
@@ -284,7 +288,9 @@ class SidebarApp:
             crop_region = crop_regions["machine"]
             detected, blur, edged, min_boxes, centers, min_box_sizes, contours, contour_sizes, bounding_boxes, bounding_box_sizes = detect_nuts(frame, crop_region)
             nuts, center_Y = process_nuts(detected, blur, edged, min_boxes, centers, min_box_sizes, contours, contour_sizes, bounding_boxes, bounding_box_sizes, crop_region)
+            self.center_Y = center_Y
             predictions = predict_nut_types(nuts)
+            self.predictions = predictions
             cv2.imwrite(f"{self.file_path}image_{self.cap_count}.jpg", detected)
             self.cap_count += 1
             for i, center in enumerate(center_Y):
