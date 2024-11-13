@@ -8,6 +8,7 @@ import cv2
 from PIL import Image, ImageTk
 import os, re, sys
 import threading  # Import threading module
+import serial  # Import pyserial for UART communication
 from detection import detect_nuts, process_nuts, predict_nut_types, crop_regions
 from utils.postprocess import adjust_coordinate
 from utils.sorting import sort_nuts, generate_sweep_path, collection_zones, free_level_y
@@ -89,7 +90,7 @@ class SidebarApp:
         self.capture_button = tk.Button(self.sidebar_canvas, text="Capture", command=self.capture_image, font=("Arial", 15))
         self.capture_button.place(x=100, y=100, anchor="center")
 
-        self.sort_button = tk.Button(self.sidebar_canvas, text="Sort", command=self.sort_nuts, font=("Arial", 15))
+        self.sort_button = tk.Button(self.sidebar_canvas, text="Sort", command=self.sort, font=("Arial", 15))
         self.sort_button.place(x=200, y=100, anchor="center")
 
         self.clear_button = tk.Button(self.sidebar_canvas, text="Clear", command=self.toggle_freeze, font=("Arial", 15))
@@ -140,6 +141,9 @@ class SidebarApp:
         # Debug
         self.cap_count = 0
         self.file_path = './debug/images/'
+
+        # Initialize UART communication
+        self.uart = serial.Serial('COM3', 115200, timeout=1)  # Adjust 'COM3' to your port
 
 
     def create_table(self):
@@ -406,13 +410,21 @@ class SidebarApp:
         # Scroll the table with the mouse wheel
         self.table_canvas.yview_scroll(int(-1 * (event.delta / 120)), "units")
 
-    def sort_nuts(self):
+    def sort(self):
         # Placeholder function for sorting nuts
         if len(self.center_Y):
             nuts = sort_nuts(self.center_Y, self.predictions)
             path = generate_sweep_path(nuts, collection_zones, free_level_y)
             print(path)
             self.draw_path(path)
+            self.send_path_to_pico(path)
+
+    def send_path_to_pico(self, path):
+        # Send the path to the Raspberry Pi Pico via UART
+        for coord in path:
+            x, y = coord
+            message = f"{x},{y}\n"
+            self.uart.write(message.encode())
 
 
 # Create the root Tkinter window

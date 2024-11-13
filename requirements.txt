@@ -16,6 +16,7 @@ filelock==3.16.1
 flatbuffers==24.3.25
 fonttools==4.54.1
 fsspec==2024.10.0
+future==1.0.0
 gast==0.6.0
 google-pasta==0.2.0
 grpcio==1.67.1
@@ -26,6 +27,7 @@ imageio==2.36.0
 imutils==0.5.4
 ipykernel==6.29.5
 ipython==8.29.0
+iso8601==2.1.0
 jax==0.4.35
 jaxlib==0.4.35
 jedi==0.19.1
@@ -87,6 +89,7 @@ scikit-learn==1.5.2
 scipy==1.14.1
 screeninfo==0.8.1
 seaborn==0.13.2
+serial==0.0.97
 setuptools==69.5.1
 six==1.16.0
 sounddevice==0.5.1
@@ -102,7 +105,7 @@ threadpoolctl==3.5.0
 tifffile==2024.9.20
 timm==1.0.11
 torch==2.5.1
-torchaudio==2.5.1
+torchaudio==2.5.1+cu118
 torchvision==0.20.1
 tornado==6.4.1
 tqdm==4.66.6
@@ -110,6 +113,7 @@ traitlets==5.14.3
 typing_extensions==4.12.2
 tzdata==2024.2
 urllib3==2.2.3
+-e git+https://github.com/Kanisorn-S/Mechatronics-Project.git@0098d5b031cba9d62f06e67e2bebf088cbf18b3e#egg=utils
 wcwidth==0.2.13
 Werkzeug==3.1.1
 wheel==0.43.0
