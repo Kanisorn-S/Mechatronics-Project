@@ -243,7 +243,7 @@ class SidebarApp:
 
     def initialize_camera(self):
         # Initialize the camera
-        self.cap = cv2.VideoCapture(1)  # Open the default camera
+        self.cap = cv2.VideoCapture(1, cv2.CAP_DSHOW)  # Open the default camera
         self.camera_on = True
         self.freeze = False
         self.main_canvas.config(highlightbackground="#00FF00", highlightthickness=10)  # Add thicker and brighter green border
@@ -405,9 +405,10 @@ class SidebarApp:
 
     def sort_nuts(self):
         # Placeholder function for sorting nuts
-        if self.center_Y:
+        if len(self.center_Y):
             nuts = sort_nuts(self.center_Y, self.predictions)
             path = generate_sweep_path(nuts, collection_zones, free_level_y)
+            print(path)
             self.draw_path(path)
 
 
