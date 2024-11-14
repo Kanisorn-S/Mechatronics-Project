@@ -46,8 +46,6 @@ def adjust_coordinate(x, y, w, h, x_offset, y_offset, y_scale=1, x_scale=1, quad
         x_scale = x_scale * 1.2
     elif y_diff < 0:
         x_scale = x_scale * 1.7
-    print("original", y_diff / mid_y)
-    print("quad", (y_diff / mid_y) ** 3)    
     if quad:
         new_x = x - x_offset * (y_diff / mid_y) * (x_diff / mid_x) * x_scale
         new_y = y + y_offset - y_scale * abs(((y_diff / mid_y) ** 3))

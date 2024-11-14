@@ -9,7 +9,7 @@ from PIL import Image, ImageTk
 import os, re, sys
 import threading  # Import threading module
 import serial  # Import pyserial for UART communication
-from detection import detect_nuts, process_nuts, predict_nut_types, crop_regions
+from detection import detect_nuts, process_nuts, predict_nut_types, crop_regions, model
 from utils.postprocess import adjust_coordinate
 from utils.sorting import sort_nuts, generate_sweep_path, collection_zones, free_level_y
 
@@ -100,9 +100,12 @@ class SidebarApp:
         self.clear_button = tk.Button(self.sidebar_canvas, text="Clear", command=self.toggle_freeze, font=("Arial", 15))
         self.clear_button.place(x=100, y=150, anchor="center")
 
-
         self.nut_selection_button = tk.Button(self.sidebar_canvas, text="Nut selection", command=self.toggle_nut_selection, font=("Arial", 15))
         self.nut_selection_button.place(x=100, y=200, anchor="center")
+
+        self.show_roi_button = tk.Button(self.sidebar_canvas, text="Show ROI", command=self.draw_region_of_interest, font=("Arial", 15))
+        self.show_roi_button.place(x=200, y=150, anchor="center")
+        self.region_of_interest = "machine"
 
         # Extra canvas for buttons and checkboxes (initially out of bounds)
         self.extra_canvas = tk.Canvas(self.root, width=200, height=root.winfo_screenheight(), bg="lightgray")
@@ -135,6 +138,8 @@ class SidebarApp:
         self.create_table()  # Create table headers
         self.update_table()  # Populate table with initial data
         self.circles = []  # Store references to drawn circles
+        self.paths = [] # Store references to drawn paths
+        self.roi = [] # Store references to drawn region of interest
 
         self.update_frame_id = None
         
@@ -285,6 +290,8 @@ class SidebarApp:
         self.clear_circles()
         self.clear_nut_quantities()
         self.update_table()
+        self.clear_region_of_interest()
+        self.clear_paths()
 
     def capture_image(self):
         # Capture and save the current frame
@@ -294,7 +301,7 @@ class SidebarApp:
             ret, frame = self.cap.read()
             if not ret:
                 return
-            crop_region = crop_regions["all"]
+            crop_region = crop_regions[self.region_of_interest]
             detected, blur, edged, min_boxes, centers, min_box_sizes, contours, contour_sizes, bounding_boxes, bounding_box_sizes = detect_nuts(frame, crop_region)
             nuts, center_Y = process_nuts(detected, blur, edged, min_boxes, centers, min_box_sizes, contours, contour_sizes, bounding_boxes, bounding_box_sizes, crop_region)
             self.center_Y = center_Y
@@ -398,6 +405,36 @@ class SidebarApp:
         text = self.main_canvas.create_text(x, y + radius + 10, text=f"{size}", fill=color)
         self.circles.extend([circle, text])  # Store references to the circle and text
 
+    def draw_region_of_interest(self):
+        x_offset = 100
+        y_offset = 20
+        y_scale = 150
+        x, y, w, h = crop_regions[self.region_of_interest]
+        tl = (x, y)
+        tr = (x + w, y)
+        bl = (x, y + h)
+        br = (x + w, y + h)
+        tl = model.predict([tl])[0]
+        tr = model.predict([tr])[0]
+        bl = model.predict([bl])[0]
+        br = model.predict([br])[0]
+        tl = adjust_coordinate(*tl, self.screen_width, self.screen_height, x_offset, y_offset, y_scale, quad=True)
+        tr = adjust_coordinate(*tr, self.screen_width, self.screen_height, x_offset, y_offset, y_scale, quad=True)
+        bl = adjust_coordinate(*bl, self.screen_width, self.screen_height, x_offset, y_offset, y_scale, quad=True)
+        br = adjust_coordinate(*br, self.screen_width, self.screen_height, x_offset, y_offset, y_scale, quad=True)
+        l1 = self.main_canvas.create_line(tl, tr, fill="red", width=2)
+        l2 = self.main_canvas.create_line(tr, br, fill="red", width=2)
+        l3 = self.main_canvas.create_line(br, bl, fill="red", width=2)
+        l4 = self.main_canvas.create_line(bl, tl, fill="red", width=2)
+        self.roi.extend([l1, l2, l3, l4])
+    
+    def clear_region_of_interest(self):
+        for line in self.roi:
+            self.main_canvas.delete(line)
+        self.roi = []
+        
+        
+
     def draw_path(self, path):
         # Draw lines connecting the coordinates in the path and display step numbers
         if len(path) < 2:
@@ -405,10 +442,16 @@ class SidebarApp:
         for i in range(len(path) - 1):
             x1, y1 = path[i]
             x2, y2 = path[i + 1]
-            self.main_canvas.create_line(x1, y1, x2, y2, fill="red", width=2)
+            new_path = self.main_canvas.create_line(x1, y1, x2, y2, fill="red", width=2)
             step_number = i + 1
             mid_x, mid_y = (x1 + x2) / 2, (y1 + y2) / 2
-            self.main_canvas.create_text(mid_x, mid_y, text=str(step_number), fill="blue", font=("Arial", 12, "bold"))
+            text = self.main_canvas.create_text(mid_x, mid_y, text=str(step_number), fill="blue", font=("Arial", 12, "bold"))
+            self.paths.extend([new_path, text])
+
+    def clear_paths(self): 
+        for path in self.paths:
+            self.main_canvas.delete(path)
+        self.paths = []
 
     def _on_mousewheel(self, event):
         # Scroll the table with the mouse wheel
@@ -419,7 +462,6 @@ class SidebarApp:
         if len(self.center_Y):
             nuts = sort_nuts(self.center_Y, self.predictions)
             path = generate_sweep_path(nuts, collection_zones, free_level_y)
-            print(path)
             self.draw_path(path)
             self.send_path_to_pico(path)
 
