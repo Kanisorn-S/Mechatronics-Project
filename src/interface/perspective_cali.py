@@ -75,6 +75,15 @@ class CircleGridApp:
         # Display center coordinates as text
         self.canvas.create_text(x, y + radius + 10, text=f"({x}, {y})", fill=color)
 
+    def draw_grid_lines(self):
+        """Draw lines through the centers of all circles, creating a grid"""
+        for center in self.centers:
+            x, y = center
+            # Draw vertical line through the center
+            self.canvas.create_line(x, 0, x, self.screen_height, fill="gray", dash=(4, 2))
+            # Draw horizontal line through the center
+            self.canvas.create_line(0, y, self.screen_width, y, fill="gray", dash=(4, 2))
+
     def draw_circles(self):
         """Draw the 3x3 grid of circles, centered in the screen"""
         self.canvas.delete("all")  # Clear the canvas before redrawing
@@ -94,6 +103,15 @@ class CircleGridApp:
         # Draw the 10th circle if the boolean is True
         if self.show_10th_circle:
             self.draw_circle(self.tenth_circle_center, self.circle_radius, color='red')
+
+        # Draw grid lines through the centers of all circles
+        self.draw_grid_lines()
+
+    def draw_programmable_circle(self, x, y, radius=None, color='blue'):
+        """Draw a circle at programmable coordinates (x, y)"""
+        if radius is None:
+            radius = self.circle_radius
+        self.draw_circle((x, y), radius, color)
 
     def toggle_full_screen(self, event):
         """Toggle between full screen and windowed mode on 'p' key press"""
@@ -116,4 +134,5 @@ if __name__ == "__main__":
     root = tk.Tk()
 
     app = CircleGridApp(root, circle_radius=60)
+    app.draw_programmable_circle(237, 165)  # Example usage
     root.mainloop()

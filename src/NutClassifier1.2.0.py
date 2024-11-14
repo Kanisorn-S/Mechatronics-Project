@@ -305,6 +305,7 @@ class SidebarApp:
             detected, blur, edged, min_boxes, centers, min_box_sizes, contours, contour_sizes, bounding_boxes, bounding_box_sizes = detect_nuts(frame, crop_region)
             nuts, center_Y = process_nuts(detected, blur, edged, min_boxes, centers, min_box_sizes, contours, contour_sizes, bounding_boxes, bounding_box_sizes, crop_region)
             self.center_Y = center_Y
+            print(center_Y)
             predictions = predict_nut_types(nuts)
             self.predictions = predictions
             cv2.imwrite(f"{self.file_path}image_{self.cap_count}.jpg", detected)
@@ -466,9 +467,16 @@ class SidebarApp:
             self.send_path_to_pico(path)
 
     def send_path_to_pico(self, path):
-        # Send the path to the Raspberry Pi Pico via UART
-        for coord in path:
-            x, y = coord
+        # Convert path to a list of moves (x, y)
+        moves = []
+        for i in range(1, len(path)):
+            x_move = path[i][0] - path[i - 1][0]
+            y_move = path[i][1] - path[i - 1][1]
+            moves.append((x_move, y_move))
+        
+        # Send the moves to the Raspberry Pi Pico via UART
+        for move in moves:
+            x, y = move
             message = f"{x},{y}\n"
             self.uart.write(message.encode())
 
