@@ -78,6 +78,10 @@ class SidebarApp:
         self.toggle_button = tk.Button(self.root, text="<", command=self.toggle_sidebar, font=("Arial", 16))
         self.update_button_position()  # Position the toggle button
 
+        # Exit button
+        self.exit_button = tk.Button(self.root, text="X", command=self.exit_program, font=("Arial", 16), bg="red", fg="white")
+        self.exit_button.place(x=20, y=20, anchor="nw")
+
         # Webcam controls
         self.camera_on = False  # Camera initially off
         self.freeze = False  # Freeze frame initially off
@@ -143,7 +147,7 @@ class SidebarApp:
         self.file_path = './debug/images/'
 
         # Initialize UART communication
-        self.uart = serial.Serial('COM3', 115200, timeout=1)  # Adjust 'COM3' to your port
+        # self.uart = serial.Serial('COM3', 115200, timeout=1)  # Adjust 'COM3' to your port
 
 
     def create_table(self):
@@ -290,7 +294,7 @@ class SidebarApp:
             ret, frame = self.cap.read()
             if not ret:
                 return
-            crop_region = crop_regions["machine"]
+            crop_region = crop_regions["all"]
             detected, blur, edged, min_boxes, centers, min_box_sizes, contours, contour_sizes, bounding_boxes, bounding_box_sizes = detect_nuts(frame, crop_region)
             nuts, center_Y = process_nuts(detected, blur, edged, min_boxes, centers, min_box_sizes, contours, contour_sizes, bounding_boxes, bounding_box_sizes, crop_region)
             self.center_Y = center_Y
@@ -382,14 +386,14 @@ class SidebarApp:
         self.update_table()  # Update table with selected nuts
     
     def draw_circle(self, center, ind=0):
-        x_offset = 125
+        x_offset = 100
         y_offset = 20
-        y_scale = 25
+        y_scale = 150
         size = self.sizes[ind]
         color = self.colors[size]
         radius = self.radiuses[ind]
         x, y = center
-        x, y = adjust_coordinate(x, y, self.screen_width, self.screen_height, x_offset, y_offset, y_scale)
+        x, y = adjust_coordinate(x, y, self.screen_width, self.screen_height, x_offset, y_offset, y_scale, quad=True)
         circle = self.main_canvas.create_oval(x - radius, y - radius, x + radius, y + radius, fill=color, outline=color)
         text = self.main_canvas.create_text(x, y + radius + 10, text=f"{size}", fill=color)
         self.circles.extend([circle, text])  # Store references to the circle and text
@@ -425,6 +429,10 @@ class SidebarApp:
             x, y = coord
             message = f"{x},{y}\n"
             self.uart.write(message.encode())
+
+    def exit_program(self):
+        self.root.quit()
+        self.root.destroy()
 
 
 # Create the root Tkinter window
