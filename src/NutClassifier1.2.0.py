@@ -152,7 +152,7 @@ class SidebarApp:
         self.file_path = './debug/images/'
 
         # Initialize UART communication
-        # self.uart = serial.Serial('COM3', 115200, timeout=1)  # Adjust 'COM3' to your port
+        self.uart = serial.Serial('COM5', 115200, timeout=1)  # Adjust 'COM3' to your port
 
 
     def create_table(self):
@@ -305,7 +305,6 @@ class SidebarApp:
             detected, blur, edged, min_boxes, centers, min_box_sizes, contours, contour_sizes, bounding_boxes, bounding_box_sizes = detect_nuts(frame, crop_region)
             nuts, center_Y = process_nuts(detected, blur, edged, min_boxes, centers, min_box_sizes, contours, contour_sizes, bounding_boxes, bounding_box_sizes, crop_region)
             self.center_Y = center_Y
-            print(center_Y)
             predictions = predict_nut_types(nuts)
             self.predictions = predictions
             cv2.imwrite(f"{self.file_path}image_{self.cap_count}.jpg", detected)
