@@ -5,6 +5,7 @@ import win32api
 from tkinter import colorchooser
 from tkinter import messagebox
 import cv2
+import numpy as np
 from PIL import Image, ImageTk
 import os, re, sys
 import threading  # Import threading module
@@ -13,6 +14,8 @@ from detection import detect_nuts, process_nuts, predict_nut_types, crop_regions
 from utils.postprocess import adjust_coordinate
 from utils.sorting import sort_nuts, generate_sweep_path, collection_zones, free_level_y
 
+
+collection_zones = {"M3": (350, 165), "M4": (450, 165), "M5": (550, 165)}
 
 class SidebarApp:
     def __init__(self, root):
@@ -105,7 +108,7 @@ class SidebarApp:
 
         self.show_roi_button = tk.Button(self.sidebar_canvas, text="Show ROI", command=self.draw_region_of_interest, font=("Arial", 15))
         self.show_roi_button.place(x=200, y=150, anchor="center")
-        self.region_of_interest = "machine"
+        self.region_of_interest = "real_machine"
 
         # Extra canvas for buttons and checkboxes (initially out of bounds)
         self.extra_canvas = tk.Canvas(self.root, width=200, height=root.winfo_screenheight(), bg="lightgray")
@@ -426,14 +429,24 @@ class SidebarApp:
         l2 = self.main_canvas.create_line(tr, br, fill="red", width=2)
         l3 = self.main_canvas.create_line(br, bl, fill="red", width=2)
         l4 = self.main_canvas.create_line(bl, tl, fill="red", width=2)
-        self.roi.extend([l1, l2, l3, l4])
+        collection_zones = self.draw_collection_zones()  # Draw collection zones
+        self.roi.extend([l1, l2, l3, l4, collection_zones])
     
     def clear_region_of_interest(self):
         for line in self.roi:
             self.main_canvas.delete(line)
         self.roi = []
         
-        
+    def draw_collection_zones(self):
+        x_offset = 100
+        y_offset = 20
+        y_scale = 150
+        for nut_type, (x, y) in collection_zones.items():
+            radius = 20  # Example radius
+            color = self.colors.get(nut_type, "black")
+            x, y = adjust_coordinate(x, y, self.screen_width, self.screen_height, x_offset, y_offset, y_scale, quad=True)
+            circle = self.main_canvas.create_oval(x - radius, y - radius, x + radius, y + radius, fill=color, outline=color)
+            text = self.main_canvas.create_text(x, y, text=nut_type, fill="white")
 
     def draw_path(self, path):
         # Draw lines connecting the coordinates in the path and display step numbers
@@ -459,9 +472,12 @@ class SidebarApp:
 
     def sort(self):
         # Placeholder function for sorting nuts
+        new_origin = (340, 165)
         if len(self.center_Y):
             nuts = sort_nuts(self.center_Y, self.predictions)
+            print(nuts)
             path = generate_sweep_path(nuts, collection_zones, free_level_y)
+            print(path)
             self.draw_path(path)
             self.send_path_to_pico(path)
 
@@ -477,6 +493,7 @@ class SidebarApp:
         for move in moves:
             x, y = move
             message = f"{x},{y}\n"
+            print(message)
             self.uart.write(message.encode())
 
     def exit_program(self):

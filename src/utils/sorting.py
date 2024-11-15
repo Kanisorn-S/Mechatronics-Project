@@ -1,8 +1,8 @@
 import numpy as np
 
 # Define collection zones for each size category
-collection_zones = {"M3": (350, 0), "M4": (450, 0), "M5": (550, 0)}
-free_level_y = 50  # Free level to avoid collection zones
+collection_zones = {"M3": (350, 165), "M4": (450, 165), "M5": (550, 165)}
+free_level_y = 215  # Free level to avoid collection zones
 
 # Function to map numeric size to string labels and sort nuts by x and y coordinates
 def sort_nuts(xy_coords, nut_sizes):
@@ -18,18 +18,18 @@ def sort_nuts(xy_coords, nut_sizes):
     return sorted_nuts
 
 # Function to generate the path for sweeping nuts to collection zones
-def generate_sweep_path(nuts, collection_zones, free_level_y=50):
+def generate_sweep_path(nuts, collection_zones, free_level_y=215):
     """
     Generates a path for sweeping nuts of different sizes to designated collection zones.
     """
-    path = [(0, 0)]  # Start at origin
+    path = [(340, 165)]  # Start at origin
 
     for nut in nuts:
         nut_x, nut_y, size = nut
         collection_x, collection_y = collection_zones[size]
 
         # Move up to a safe level above the nut
-        path.append((0, nut_y + 10))          # Vertical move to safe level above nut
+        path.append((340, nut_y + 10))          # Vertical move to safe level above nut
         path.append((nut_x, nut_y + 10))      # Horizontal move over the nut
 
         # Sweep down to free level
@@ -43,9 +43,9 @@ def generate_sweep_path(nuts, collection_zones, free_level_y=50):
 
         # Return to free level and then to (0, free_level_y) for the next sweep
         path.append((collection_x, free_level_y))
-        path.append((0, free_level_y))
+        path.append((340, free_level_y))
 
     # Return to starting position after all sweeps are complete
-    path.append((0, 0))
+    path.append((340, 165))
 
     return path
